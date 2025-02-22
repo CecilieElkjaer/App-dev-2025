@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">CopenhagenBuzz</string>
+    <string name="button_description">Button which adds events</string>
+    <string name="event_description">Event description</string>
+    <string name="event_type">Event type</string>
+    <string name="event_date">Event date</string>
+    <string name="event_location">Event location</string>
+    <string name="event_name">Event name</string>
+    <string name="guest_user">Guest</string>
+    <string name="login_button">Login</string>
+    <string name="fragment_calender">Calender</string>
+    <string name="fragment_maps">Maps</string>
+    <string name="fragment_favorites">Favorites</string>
+    <string name="fragment_timeline">Timeline</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="add_event">Add new event</string>
+    <string name="logout_button">Logout</string>
+    <string name="fragment_add_event" />
+</resources>
