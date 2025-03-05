@@ -73,6 +73,7 @@ class AddEventFragment : Fragment() {
 
         // Create an Event object
         return Event(
+            eventPhoto = "https://source.unsplash.com/random/800x600",
             eventName = binding.editTextEventName.text.toString(),
             eventLocation = binding.editTextEventLocation.text.toString(),
             eventDate = eventDate,

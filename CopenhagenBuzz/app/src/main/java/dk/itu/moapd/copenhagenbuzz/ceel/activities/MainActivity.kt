@@ -28,6 +28,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.core.view.WindowCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -78,31 +79,28 @@ class MainActivity : AppCompatActivity() {
 
         //set up the top app bar
         setSupportActionBar(mainBinding.topAppBar)
-        updateAppBarIcon()
 
         //Search the view hierarchy and fragment for the `NavController` and return it to you.
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view)
-        if (navHostFragment is NavHostFragment) {
-            val navController = navHostFragment.navController
-            mainBinding.bottomNavigation.setupWithNavController(navController)
-        } else {
-            throw IllegalStateException("NavHostFragment not found! Check activity_main.xml")
-        }
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view) as NavHostFragment
+        val navController = navHostFragment.navController
+        mainBinding.bottomNavigation.setupWithNavController(navController)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_app_bar_menu, menu)
+
+        menu?.findItem(R.id.menu_login)?.isVisible = !isLoggedIn
+        menu?.findItem(R.id.menu_logout)?.isVisible = isLoggedIn
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_add_event -> {
-                // Open the AddEventFragment when the button is clicked
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, AddEventFragment())
-                transaction.addToBackStack(null) // Allows user to navigate back
-                transaction.commit()
+            R.id.menu_login -> {
+                // redirect to LoginActivity when logging out.
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                finish()
                 true
             }
             R.id.menu_logout -> {
@@ -112,44 +110,15 @@ class MainActivity : AppCompatActivity() {
                 finish()
                 true
             }
-            R.id.fragment_timeline -> {
-                // Open the TimelineFragment when the button is clicked in the bottom navigation
+            R.id.menu_add_event -> {
+                // Open the AddEventFragment when the button is clicked
                 val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, TimelineFragment())
-                transaction.addToBackStack(null) // Allows user to navigate back
-                transaction.commit()
-                true
-            }
-            R.id.fragment_favorites -> {
-                // Open the FavoritesFragment when the button is clicked in the bottom navigation
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, FavoritesFragment())
-                transaction.addToBackStack(null) // Allows user to navigate back
-                transaction.commit()
-                true
-            }
-            R.id.fragment_maps -> {
-                // Open the MapsFragment when the button is clicked in the bottom navigation
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, MapsFragment())
-                transaction.addToBackStack(null) // Allows user to navigate back
-                transaction.commit()
-                true
-            }
-            R.id.fragment_calender -> {
-                // Open the CalenderFragment when the button is clicked in the bottom navigation
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, CalendarFragment())
+                transaction.replace(R.id.fragment_container_view, AddEventFragment())
                 transaction.addToBackStack(null) // Allows user to navigate back
                 transaction.commit()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    private fun updateAppBarIcon() {
-        val iconRes = if (isLoggedIn) R.drawable.baseline_logout_24 else R.drawable.baseline_account_circle_24
-        mainBinding.topAppBar.navigationIcon = getDrawable(iconRes)
     }
 }
