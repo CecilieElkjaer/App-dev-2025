@@ -23,6 +23,7 @@
  */
 package dk.itu.moapd.copenhagenbuzz.ceel.data
 
+import dk.itu.moapd.copenhagenbuzz.ceel.R
 import java.time.LocalDate
 
 /**
@@ -34,11 +35,11 @@ import java.time.LocalDate
  * @property eventType The category or type of the event.
  * @property eventDescription A brief description of the event.
  */
-data class Event (
-     var eventPhoto: String,
-     var eventName: String,
-     var eventLocation: String,
-     var eventDate: LocalDate,
-     var eventType: String,
-     var eventDescription: String,
+data class Event(
+    var eventPhoto: String,
+    var eventName: String,
+    var eventLocation: String,
+    var eventDate: LocalDate,
+    var eventType: String,
+    var eventDescription: String,
 )

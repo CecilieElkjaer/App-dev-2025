@@ -28,17 +28,11 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.core.view.WindowCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.ActivityMainBinding
-import dk.itu.moapd.copenhagenbuzz.ceel.fragments.AddEventFragment
-import dk.itu.moapd.copenhagenbuzz.ceel.fragments.CalendarFragment
-import dk.itu.moapd.copenhagenbuzz.ceel.fragments.FavoritesFragment
-import dk.itu.moapd.copenhagenbuzz.ceel.fragments.MapsFragment
-import dk.itu.moapd.copenhagenbuzz.ceel.fragments.TimelineFragment
 
 /**
  * The main entry point of the application. This activity initializes the user interface
@@ -83,9 +77,20 @@ class MainActivity : AppCompatActivity() {
         //Search the view hierarchy and fragment for the `NavController` and return it to you.
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view) as NavHostFragment
         val navController = navHostFragment.navController
+        val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
+        navController.graph = navGraph
+
         mainBinding.bottomNavigation.setupWithNavController(navController)
     }
 
+    /**
+     * Creates the options menu in the top app bar.
+     * This menu includes login/logout options, which change visibility
+     * based on the user's authentication status.
+     *
+     * @param menu The options menu in which items are placed.
+     * @return True if the menu is successfully created.
+     */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_app_bar_menu, menu)
 
@@ -94,7 +99,16 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /**
+     * Handles selections from the options menu.
+     * This method is used to navigate between fragments.
+     *
+     * @param item The selected menu item.
+     * @return True if the item is handled, otherwise calls the superclass implementation.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view) as NavHostFragment
+        val navController = navHostFragment.navController
         return when (item.itemId) {
             R.id.menu_login -> {
                 // redirect to LoginActivity when logging out.
@@ -103,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                 finish()
                 true
             }
+
             R.id.menu_logout -> {
                 // redirect to LoginActivity when logging out.
                 val intent = Intent(this, LoginActivity::class.java)
@@ -110,14 +125,37 @@ class MainActivity : AppCompatActivity() {
                 finish()
                 true
             }
-            R.id.menu_add_event -> {
+
+            R.id.fragment_add_event -> {
                 // Open the AddEventFragment when the button is clicked
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container_view, AddEventFragment())
-                transaction.addToBackStack(null) // Allows user to navigate back
-                transaction.commit()
+                navController.navigate(R.id.fragment_add_event)
                 true
             }
+
+            R.id.fragment_timeline -> {
+                // Open the TimelineFragment when the button is clicked
+                navController.navigate(R.id.fragment_timeline)
+                true
+            }
+
+            R.id.fragment_favorites -> {
+                // Open the FavoritesFragment when the button is clicked
+                navController.navigate(R.id.fragment_favorites)
+                true
+            }
+
+            R.id.fragment_maps -> {
+                //Opens the MapsFragment when the button is clicked
+                navController.navigate(R.id.fragment_maps)
+                true
+            }
+
+            R.id.fragment_calender -> {
+                //Opens the CalenderFragment when the button is clicked
+                navController.navigate(R.id.fragment_calender)
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

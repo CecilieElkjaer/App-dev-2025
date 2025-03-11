@@ -12,7 +12,8 @@
         tools:layout="@layout/fragment_timeline">
         <action
             android:id="@+id/action_timeline_to_add_event"
-            app:destination="@id/fragment_add_event" />
+            app:destination="@id/fragment_add_event"
+            app:launchSingleTop="true"/>
         <action
             android:id="@+id/action_timeline_to_favorites"
             app:destination="@id/fragment_favorites" />
@@ -29,6 +30,26 @@
         android:name="dk.itu.moapd.copenhagenbuzz.ceel.fragments.AddEventFragment"
         android:label="@string/fragment_add_event"
         tools:layout="@layout/fragment_add_event">
+        <action
+            android:id="@+id/action_add_event_to_timeline"
+            app:destination="@id/fragment_timeline"
+            app:popUpTo="@id/fragment_timeline"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_add_event_to_favorites"
+            app:destination="@id/fragment_favorites"
+            app:popUpTo="@id/fragment_timeline"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_add_event_to_maps"
+            app:destination="@id/fragment_maps"
+            app:popUpTo="@id/fragment_timeline"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_add_event_to_calender"
+            app:destination="@id/fragment_calender"
+            app:popUpTo="@id/fragment_timeline"
+            app:popUpToInclusive="true"/>
     </fragment>
 
     <fragment

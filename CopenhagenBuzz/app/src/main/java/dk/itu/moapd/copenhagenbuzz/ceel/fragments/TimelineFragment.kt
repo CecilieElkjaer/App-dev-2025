@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import dk.itu.moapd.copenhagenbuzz.ceel.DataViewModel
+import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.adapters.EventAdapter
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentTimelineBinding
 

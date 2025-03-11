@@ -17,7 +17,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="add_event">Add new event</string>
     <string name="logout_button">Logout</string>
-    <string name="fragment_add_event" />
+    <string name="fragment_add_event">Add Event</string>
     <string name="event_image">Event image</string>
     <string name="edit_text_button">Edit</string>
     <string name="edit_event_button">Edit</string>

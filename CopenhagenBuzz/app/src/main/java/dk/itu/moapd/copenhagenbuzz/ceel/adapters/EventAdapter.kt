@@ -9,7 +9,9 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import org.w3c.dom.Text
@@ -35,7 +37,6 @@ class EventAdapter(private val context: Context, private val eventList: List<Eve
             .inflate(R.layout.event_row_item, parent, false)
         val viewHolder = (view.tag as? ViewHolder) ?: ViewHolder(view)
 
-        Log.d(TAG, "Populate an item at position: $position")
         getItem(position)?.let { event ->
             populateViewHolder(viewHolder, event)
         }
@@ -53,21 +54,26 @@ class EventAdapter(private val context: Context, private val eventList: List<Eve
             eventDate.text = event.eventDate.format(dateFormatter)
             eventDescription.text = event.eventDescription
 
-            //Changes the first letter of the eventType in the icon.
+            //setting a default image for each event, defined in the Event data class.
+            eventImage.setImageResource(R.drawable.mockevent_img)
+
+            //changes the first letter of the eventType in the icon.
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
-
-            //Placeholders for liking an event, editing an event and clicking infor button.
-            heartIcon.setOnClickListener {
-                Log.d(TAG, "Heart icon clicked for event: ${event.eventName}")
+            //Placeholders for liking an event, editing an event and clicking info button.
+            heartIcon.setOnClickListener { view ->
+                Snackbar.make(view, "${event.eventName} was added to your favorites", Snackbar.LENGTH_SHORT)
+                    .show()
             }
 
-            editButton.setOnClickListener {
-                Log.d(TAG, "Edit button clicked for event: ${event.eventName}")
+            editButton.setOnClickListener { view ->
+                Snackbar.make(view, "Edit button clicked for event: ${event.eventName}", Snackbar.LENGTH_SHORT)
+                    .show()
             }
 
-            infoButton.setOnClickListener {
-                Log.d(TAG, "Info button clicked for event: ${event.eventName}")
+            infoButton.setOnClickListener { view ->
+                Snackbar.make(view, "Info button clicked for event: ${event.eventName}", Snackbar.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -84,6 +90,4 @@ class EventAdapter(private val context: Context, private val eventList: List<Eve
         val editButton: MaterialButton = view.findViewById(R.id.button_edit_event)
         val infoButton: MaterialButton = view.findViewById(R.id.button_info_on_event)
     }
-
-
 }

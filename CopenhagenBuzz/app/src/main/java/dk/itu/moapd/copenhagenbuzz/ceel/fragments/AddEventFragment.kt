@@ -5,7 +5,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import dk.itu.moapd.copenhagenbuzz.ceel.R
+import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentAddEventBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DatePickerHelper
@@ -21,11 +25,13 @@ import java.time.format.DateTimeFormatter
 class AddEventFragment : Fragment() {
 
     private var _binding: FragmentAddEventBinding? = null
-    private val binding get() = requireNotNull(_binding) {
-        "Cannot access binding because it is null. Is the view visible?"
-    }
+    private val binding
+        get() = requireNotNull(_binding) {
+            "Cannot access binding because it is null. Is the view visible?"
+        }
     private lateinit var datePickerHelper: DatePickerHelper
     private lateinit var dropdownHelper: DropDownHelper
+    private val viewModel: DataViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,14 +52,24 @@ class AddEventFragment : Fragment() {
         dropdownHelper = DropDownHelper(requireContext())
         dropdownHelper.setupEventTypeDropdown(binding.dropdownEventType)
 
-        binding.fabAddEvent.setOnClickListener{
-            if(validateInputs()) {
+        binding.fabAddEvent.setOnClickListener {
+            if (validateInputs()) {
+                //create event
                 val event = createEvent()
-                Snackbar.make(requireView(), "Event '${event.eventName}' added!\"", Snackbar.LENGTH_SHORT).show()
+
+                //add event to the view
+                viewModel.addEvent(event)
+
+                Snackbar.make(
+                    requireView(),
+                    "Event '${event.eventName}' added!\"",
+                    Snackbar.LENGTH_SHORT
+                ).show()
 
                 requireActivity().supportFragmentManager.popBackStack()
             } else {
-                Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -73,7 +89,7 @@ class AddEventFragment : Fragment() {
 
         // Create an Event object
         return Event(
-            eventPhoto = "https://source.unsplash.com/random/800x600",
+            eventPhoto = "res/drawable/mockevent_img.jpeg",
             eventName = binding.editTextEventName.text.toString(),
             eventLocation = binding.editTextEventLocation.text.toString(),
             eventDate = eventDate,

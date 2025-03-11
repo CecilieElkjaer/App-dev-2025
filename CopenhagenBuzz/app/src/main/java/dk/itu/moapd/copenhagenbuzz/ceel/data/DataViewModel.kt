@@ -1,11 +1,10 @@
-package dk.itu.moapd.copenhagenbuzz.ceel
+package dk.itu.moapd.copenhagenbuzz.ceel.data
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.javafaker.Faker
-import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,7 +23,7 @@ class DataViewModel : ViewModel() {
     //Fetch event data async by using coroutines
     private fun fetchEvents(){
         viewModelScope.launch(Dispatchers.IO) {
-            delay(1000)
+            delay(10)
             val mockEvents = generateMockEvents(10) //generates 10 mock events
             _events.postValue(mockEvents)
         }
@@ -33,7 +32,7 @@ class DataViewModel : ViewModel() {
     private fun generateMockEvents(count: Int): List<Event> {
         val eventList = mutableListOf<Event>()
         for (i in 1..count) {
-            val photoUrl = "https://source.unsplash.com/random/800x600?sig=$i"
+            val photoUrl = "https://unsplash.com/photos/aerial-view-of-a-rocky-beach-and-ocean-dDwRatblC1Y"
             val name = faker.book().title()
             val location = faker.address().city()
             val date = LocalDate.now().plusDays(Random.nextLong(1, 30))
@@ -45,4 +44,9 @@ class DataViewModel : ViewModel() {
         return eventList
     }
 
+    fun addEvent(newEvent: Event) {
+        val currentList = _events.value?.toMutableList() ?: mutableListOf()
+        currentList.add(0, newEvent)
+        _events.value = currentList // Update LiveData
+    }
 }

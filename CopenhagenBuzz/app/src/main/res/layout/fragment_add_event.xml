@@ -7,6 +7,17 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <TextView
+        android:id="@+id/add_event_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/fragment_add_event"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="16dp"/>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/text_field_event_name"
         android:layout_width="0dp"
@@ -18,14 +29,15 @@
         app:endIconMode="clear_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/add_event_title"
         app:startIconDrawable="@drawable/baseline_festival_24">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_text_event_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:inputType="text"
+            android:background="?attr/colorSurface"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -46,7 +58,8 @@
             android:id="@+id/edit_text_event_location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:inputType="text"
+            android:background="?attr/colorSurface"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -66,6 +79,7 @@
             android:id="@+id/edit_text_event_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?attr/colorSurface"
             android:focusable="false"
             android:clickable="true"
             android:inputType="none" />
@@ -90,6 +104,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none"
+            android:background="?attr/colorSurface"
             tools:ignore="LabelFor" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -111,7 +126,8 @@
             android:layout_width="match_parent"
             android:gravity="top"
             android:layout_height="165dp"
-            android:inputType="text" />
+            android:inputType="text"
+            android:background="?attr/colorSurface" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
