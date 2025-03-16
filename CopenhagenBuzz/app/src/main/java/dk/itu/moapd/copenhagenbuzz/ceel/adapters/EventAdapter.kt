@@ -13,11 +13,12 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import dk.itu.moapd.copenhagenbuzz.ceel.R
+import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import org.w3c.dom.Text
 import java.time.format.DateTimeFormatter
 
-class EventAdapter(private val context: Context, private val eventList: List<Event>) : BaseAdapter() {
+class EventAdapter(private val context: Context, private val eventList: List<Event>, private val viewModel: DataViewModel) : BaseAdapter() {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     override fun getCount(): Int {
@@ -60,10 +61,19 @@ class EventAdapter(private val context: Context, private val eventList: List<Eve
             //changes the first letter of the eventType in the icon.
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
+            updateFavoriteIcon(heartIcon, event)
+
             //Placeholders for liking an event, editing an event and clicking info button.
             heartIcon.setOnClickListener { view ->
-                Snackbar.make(view, "${event.eventName} was added to your favorites", Snackbar.LENGTH_SHORT)
-                    .show()
+                viewModel.toggleFavoriteButton(event)
+                updateFavoriteIcon(heartIcon, event)
+
+                val message = if (viewModel.isFavorite(event)) {
+                    "${event.eventName} added to favorites"
+                } else {
+                    "${event.eventName} removed from favorites"
+                }
+                Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
             }
 
             editButton.setOnClickListener { view ->
@@ -76,6 +86,13 @@ class EventAdapter(private val context: Context, private val eventList: List<Eve
                     .show()
             }
         }
+    }
+
+    private fun updateFavoriteIcon(heartIcon: ImageView, event: Event) {
+        val isFavorite = viewModel.isFavorite(event)
+        heartIcon.setImageResource(
+            if (isFavorite) R.drawable.baseline_favorite_like_24 else R.drawable.baseline_favorite_border_24
+        )
     }
 
     private inner class ViewHolder(view: View){

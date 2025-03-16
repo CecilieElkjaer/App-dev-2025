@@ -24,12 +24,15 @@
 package dk.itu.moapd.copenhagenbuzz.ceel.activities
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.ActivityMainBinding
@@ -71,8 +74,7 @@ class MainActivity : AppCompatActivity() {
         //get login status from intent
         isLoggedIn = intent.getBooleanExtra("isLoggedIn", false)
 
-        //set up the top app bar
-        setSupportActionBar(mainBinding.topAppBar)
+
 
         //Search the view hierarchy and fragment for the `NavController` and return it to you.
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view) as NavHostFragment
@@ -80,7 +82,18 @@ class MainActivity : AppCompatActivity() {
         val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
         navController.graph = navGraph
 
-        mainBinding.bottomNavigation.setupWithNavController(navController)
+        //set up the top app bar for landscape and portrait mode
+        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            setSupportActionBar(mainBinding.topAppBar)
+            val appBarConfiguration = AppBarConfiguration(navController.graph)
+            setupActionBarWithNavController(navController, appBarConfiguration)
+        } else if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            mainBinding.topAppBarLand?.setupWithNavController(navController)
+        }
+
+        //setup bottomnavigation for landscape and portrait mode
+        mainBinding.bottomNavigation?.setupWithNavController(navController)
+        mainBinding.bottomNavigationRail?.setupWithNavController(navController)
     }
 
     /**
@@ -123,36 +136,6 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
                 finish()
-                true
-            }
-
-            R.id.fragment_add_event -> {
-                // Open the AddEventFragment when the button is clicked
-                navController.navigate(R.id.fragment_add_event)
-                true
-            }
-
-            R.id.fragment_timeline -> {
-                // Open the TimelineFragment when the button is clicked
-                navController.navigate(R.id.fragment_timeline)
-                true
-            }
-
-            R.id.fragment_favorites -> {
-                // Open the FavoritesFragment when the button is clicked
-                navController.navigate(R.id.fragment_favorites)
-                true
-            }
-
-            R.id.fragment_maps -> {
-                //Opens the MapsFragment when the button is clicked
-                navController.navigate(R.id.fragment_maps)
-                true
-            }
-
-            R.id.fragment_calender -> {
-                //Opens the CalenderFragment when the button is clicked
-                navController.navigate(R.id.fragment_calender)
                 true
             }
 

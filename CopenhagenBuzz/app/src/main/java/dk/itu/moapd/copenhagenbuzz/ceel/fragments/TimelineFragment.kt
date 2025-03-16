@@ -17,6 +17,7 @@ class TimelineFragment : Fragment() {
 
     private var _binding: FragmentTimelineBinding? = null
     private val viewModel: DataViewModel by activityViewModels()
+    private lateinit var adapter: EventAdapter
 
     private val binding get() = requireNotNull(_binding) {
         "Cannot access binding because it is null. Is the view visible?"
@@ -33,8 +34,12 @@ class TimelineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        adapter = EventAdapter(requireContext(), emptyList(),viewModel)
+        binding.timelineListView.adapter = adapter
+
+        //below makes sure that changes in the event list is observed
         viewModel.events.observe(viewLifecycleOwner) { events ->
-            val adapter = EventAdapter(requireContext(), events)
+            val adapter = EventAdapter(requireContext(), events, viewModel)
             binding.timelineListView.adapter = adapter
         }
     }

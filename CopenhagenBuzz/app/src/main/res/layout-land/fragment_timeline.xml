@@ -6,24 +6,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
-        android:id="@+id/favorites_title"
+        android:id="@+id/timeline_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/fragment_favorites"
+        android:text="@string/timeline"
         android:textSize="30sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="@dimen/margin_medium"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="16dp"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/favoriteRecyclerView"
-        android:layout_width="match_parent"
+    <ListView
+        android:id="@+id/timeline_list_view"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
         android:nestedScrollingEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timeline_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/favorites_title"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

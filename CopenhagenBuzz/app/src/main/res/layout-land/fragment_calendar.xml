@@ -6,24 +6,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
-        android:id="@+id/favorites_title"
+        android:id="@+id/calender_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/fragment_favorites"
+        android:text="@string/fragment_calender"
         android:textSize="30sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/favoriteRecyclerView"
+    <ImageView
+        android:id="@+id/maps_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="vertical"
-        android:nestedScrollingEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/favorites_title"/>
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/baseline_calendar_today_24"
+        app:layout_constraintTop_toBottomOf="@id/calender_title"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

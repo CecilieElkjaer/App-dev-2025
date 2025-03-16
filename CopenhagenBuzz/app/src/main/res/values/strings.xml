@@ -10,7 +10,7 @@
     <string name="login_button">Login</string>
     <string name="fragment_calender">Calender</string>
     <string name="fragment_maps">Maps</string>
-    <string name="fragment_favorites">Favorites</string>
+    <string name="fragment_favorites">Favorite Events</string>
     <string name="fragment_timeline">Timeline</string>
 
     <!-- TODO: Remove or change this placeholder text -->

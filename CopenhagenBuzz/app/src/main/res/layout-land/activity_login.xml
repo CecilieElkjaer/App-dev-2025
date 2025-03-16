@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/pastel_purple_flower_pattern"
+    android:background="@drawable/pastel_purple_flower_pattern_land"
     tools:context=".activities.MainActivity">
 
     <TextView
@@ -22,6 +22,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/login_to_account"
@@ -51,6 +52,6 @@
         android:textColor="?attr/colorOnPrimary"
         app:cornerRadius="15dp"
         app:layout_constraintEnd_toEndOf="@id/text_view_app_name"
-        app:layout_constraintTop_toBottomOf="@id/text_view_app_name" />
+        app:layout_constraintTop_toBottomOf="@+id/text_view_app_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
