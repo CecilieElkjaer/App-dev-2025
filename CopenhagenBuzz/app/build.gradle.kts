@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
@@ -57,4 +57,6 @@ dependencies {
     implementation(libs.javafaker)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.ui.auth)
+    implementation(libs.facebook.login)
+    implementation(libs.facebook.android.sdk)
 }

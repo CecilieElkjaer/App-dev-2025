@@ -3,13 +3,23 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_user_info"
+        android:icon="@drawable/baseline_account_circle_24"
+        android:orderInCategory="100"
+        android:title="@string/user_info_title"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_login"
         android:icon="@drawable/baseline_account_circle_24"
         android:title="@string/login_button"
-        app:showAsAction="always" />
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/menu_logout"
         android:icon="@drawable/baseline_logout_24"
+        android:orderInCategory="100"
         android:title="@string/logout_button"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 </menu>

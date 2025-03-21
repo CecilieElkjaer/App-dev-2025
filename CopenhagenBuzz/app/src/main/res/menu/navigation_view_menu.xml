@@ -1,0 +1,53 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- User Settings -->
+    <item
+        android:id="@+id/user_settings_submenu"
+        android:title="@string/user_settings">
+
+        <menu android:checkableBehavior="none">
+            <item
+                android:id="@+id/nav_account"
+                android:title="@string/account"
+                android:icon="@drawable/baseline_account_circle_24"/>
+            <item
+                android:id="@+id/nav_add_event"
+                android:title="@string/new_event"
+                android:icon="@drawable/baseline_add_circle_24"/>
+            <item
+                android:id="@+id/nav_event_history"
+                android:title="@string/event_history"
+                android:icon="@drawable/baseline_history_24"/>
+        </menu>
+    </item>
+
+    <!-- General Settings -->
+    <item
+        android:id="@+id/general_settings_submenu"
+        android:title="@string/general_settings">
+
+        <menu android:checkableBehavior="none">
+            <item
+                android:id="@+id/nav_notifications"
+                android:title="@string/notifications"
+                android:icon="@drawable/baseline_circle_notifications_24"/>
+            <item
+                android:id="@+id/nav_support"
+                android:title="@string/support"
+                android:icon="@drawable/baseline_support_agent_24"/>
+            <item
+                android:id="@+id/nav_settings"
+                android:title="@string/settings"
+                android:icon="@drawable/baseline_settings_24"/>
+            <item
+                android:id="@+id/nav_help"
+                android:title="@string/help"
+                android:icon="@drawable/baseline_help_24"/>
+            <item
+                android:id="@+id/nav_terms"
+                android:title="@string/terms_conditions"
+                android:icon="@drawable/baseline_fact_check_24"/>
+        </menu>
+    </item>
+
+</menu>
