@@ -36,10 +36,11 @@ import java.time.LocalDate
  * @property eventDescription A brief description of the event.
  */
 data class Event(
-    var eventPhoto: String,
-    var eventName: String,
-    var eventLocation: String,
-    var eventDate: LocalDate,
-    var eventType: String,
-    var eventDescription: String,
+    var eventPhoto: String = "",
+    var eventName: String = "",
+    var eventLocation: String = "",
+    var eventDate: Long = 0L,
+    var eventType: String = "",
+    var eventDescription: String = "",
+    var userId: String = ""
 )

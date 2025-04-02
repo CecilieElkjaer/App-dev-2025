@@ -41,4 +41,6 @@
     <string name="user_settings">User Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="facebook_application_id">1360877908442521</string>
+    <string name="fragment_edit_event">Edit Event</string>
+    <string name="cancel_button_description">Cancel editing an event</string>
 </resources>

@@ -6,15 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import dk.itu.moapd.copenhagenbuzz.ceel.R
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.database
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentAddEventBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DatePickerHelper
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DropDownHelper
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
@@ -33,11 +35,7 @@ class AddEventFragment : Fragment() {
     private lateinit var dropdownHelper: DropDownHelper
     private val viewModel: DataViewModel by activityViewModels()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = FragmentAddEventBinding.inflate(inflater, container, false).also {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = FragmentAddEventBinding.inflate(inflater, container, false).also {
         _binding = it
     }.root
 
@@ -57,19 +55,28 @@ class AddEventFragment : Fragment() {
                 //create event
                 val event = createEvent()
 
-                //add event to the view
-                viewModel.addEvent(event)
-
+                Firebase.database.getReference("copenhagen_buzz/events").push().setValue(event)
+                    .addOnSuccessListener {
+                        Snackbar.make(
+                            requireView(),
+                            "Event '${event.eventName}' added!",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        requireActivity().supportFragmentManager.popBackStack()
+                    }
+                    .addOnFailureListener { error ->
+                        Snackbar.make(
+                            requireView(),
+                            "Failed to add event: ${error.message}",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+            } else {
                 Snackbar.make(
                     requireView(),
-                    "Event '${event.eventName}' added!\"",
+                    "Please fill in all fields",
                     Snackbar.LENGTH_SHORT
                 ).show()
-
-                requireActivity().supportFragmentManager.popBackStack()
-            } else {
-                Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT)
-                    .show()
             }
         }
     }
@@ -83,18 +90,23 @@ class AddEventFragment : Fragment() {
     }
 
     private fun createEvent(): Event {
-        // Convert date string to LocalDate
+        // Convert date string to Long
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
+        val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
+
+        // Retrieve user id
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
         // Create an Event object
         return Event(
             eventPhoto = "res/drawable/mockevent_img.jpeg",
             eventName = binding.editTextEventName.text.toString(),
             eventLocation = binding.editTextEventLocation.text.toString(),
-            eventDate = eventDate,
+            eventDate = timestamp,
             eventType = binding.dropdownEventType.text.toString(),
-            eventDescription = binding.editTextEventDescription.text.toString()
+            eventDescription = binding.editTextEventDescription.text.toString(),
+            userId = userId
         )
     }
 

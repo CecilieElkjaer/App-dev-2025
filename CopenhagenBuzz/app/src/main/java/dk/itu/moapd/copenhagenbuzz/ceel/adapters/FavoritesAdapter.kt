@@ -6,10 +6,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 
-class FavoritesAdapter(private var favoriteEvents: List<Event>) : RecyclerView.Adapter<FavoritesAdapter.ViewHolder>() {
+class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecyclerAdapter<Event, FavoritesAdapter.ViewHolder>(options) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(
@@ -18,30 +20,31 @@ class FavoritesAdapter(private var favoriteEvents: List<Event>) : RecyclerView.A
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        val event = favoriteEvents[position]
-        viewHolder.eventName.text = event.eventName
-        viewHolder.eventType.text = event.eventType
-
-        //changes the first letter of the eventType in the icon.
-        viewHolder.eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
-
-        viewHolder.eventImage.setImageResource(R.drawable.mockevent_img)
+    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int, model: Event) {
+        viewHolder.bind(model)
     }
 
-    override fun getItemCount(): Int {
-        return favoriteEvents.size
-    }
-
-    fun updateFavorites(newFavorites : List<Event>) {
-        favoriteEvents = newFavorites
-        notifyDataSetChanged()
-    }
-
+    /**
+     * Inner ViewHolder for FavoritesAdapter.
+     */
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val eventName : TextView = view.findViewById(R.id.event_title)
         val eventType : TextView = view.findViewById(R.id.event_type)
         val eventImage : ImageView = view.findViewById(R.id.event_image_view)
         val eventTypeIcon : TextView = view.findViewById(R.id.event_type_icon)
+
+        /**
+         * Binds the favorite event data to the UI components.
+         */
+        fun bind(event: Event) {
+            eventName.text = event.eventName
+            eventType.text = event.eventType
+
+            //displaying the first letter of the event type or a default "E"
+            eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
+
+            //setting a default image resource (should be changed)
+            eventImage.setImageResource(R.drawable.mockevent_img)
+        }
     }
 }

@@ -57,6 +57,10 @@ dependencies {
     implementation(libs.javafaker)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.ui.database)
     implementation(libs.facebook.login)
     implementation(libs.facebook.android.sdk)
+    implementation(libs.dotenv.kotlin)
+
 }

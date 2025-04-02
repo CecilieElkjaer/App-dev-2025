@@ -5,74 +5,157 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.javafaker.Faker
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 class DataViewModel : ViewModel() {
+
+    //LiveData which holds the list of events from the Firebase Database
     private val _events = MutableLiveData<List<Event>>()
     val events: LiveData<List<Event>> get() = _events // Exposed LiveData
 
-    private val _favorite = MutableLiveData<List<Event>>()
-    val favorites: LiveData<List<Event>> get() = _favorite //exposed the list of favorite events
+    //LiveData which holds the list of favorite events for the current user
+    private val _favorites = MutableLiveData<List<Event>>()
+    val favorites: LiveData<List<Event>> get() = _favorites //exposed the list of favorite events
 
-    private val faker = Faker()
+    //The Firebase database instance
+    private val database = Firebase.database
+
+    // Listeners to subscribe/unsubscribe from Firebase updates
+    private var eventsListener: ValueEventListener? = null
+    private var favoritesListener: ValueEventListener? = null
 
     init {
-        fetchEvents() // Fetch mock data when ViewModel initializes
+        eventsListener()
+        favoritesListener()
     }
 
-    //Fetch event data async by using coroutines
-    private fun fetchEvents(){
-        viewModelScope.launch(Dispatchers.IO) {
-            delay(10)
-            val mockEvents = generateMockEvents(10) //generates 10 mock events
-            _events.postValue(mockEvents)
+    /**
+    Listens for any changes for the "copenhagen_buzz/events" node in the database, and then updates accordingly.
+     */
+    private fun eventsListener() {
+        val eventsRef = database.getReference("copenhagen_buzz/events")
 
-            _favorite.postValue(generateRandomFavorites(mockEvents))
+        eventsListener = eventsRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                //a list that holds the events fetched from the Firebase database
+                val eventsList = mutableListOf<Event>()
+                for (child in snapshot.children) {
+                    //convert each child snapshot into an Event object
+                    child.getValue(Event::class.java)?.let { eventsList.add(it) }
+                }
+                //posting the list of events to the LiveData so observers can update
+                _events.postValue(eventsList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    /**
+    Listens for any changes to the current user's favorites in the database on the "copenhagen_buzz/favorites/<currentUserId>" node,
+    and then updates the LiveData with the current list of favorite events for the current user.
+     */
+    private fun favoritesListener() {
+        // Get the current user's ID from FirebaseAuth; if not available, do nothing
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val favRef = database.getReference("copenhagen_buzz/favorites").child(currentUserId)
+
+        favoritesListener = favRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                //a list that holds the favorite events fetched from Firebase database
+                val favList = mutableListOf<Event>()
+                for (child in snapshot.children) {
+                    //convert each child snapshot into an Event object, and adding the event to list of favorite events.
+                    child.getValue(Event::class.java)?.let { favList.add(it) }
+                }
+                //posting the favorite events list to the LiveData
+                _favorites.postValue(favList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    /**
+     * Called when the ViewModel is about to be destroyed.
+     * Removes Firebase listeners to prevent memory leaks.
+     */
+    override fun onCleared() {
+        super.onCleared()
+        eventsListener?.let {
+            database.getReference("copenhagen_buzz/events").removeEventListener(it)
+        }
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserId != null && favoritesListener != null) {
+            database.getReference("copenhagen_buzz/favorites").child(currentUserId)
+                .removeEventListener(favoritesListener!!)
         }
     }
 
-    private fun generateRandomFavorites(events: List <Event >): List <Event > {
-        val shuffledIndices = (events.indices).shuffled().take(5).sorted()
-        return shuffledIndices.mapNotNull { index -> events.getOrNull(index) }
-    }
 
-    private fun generateMockEvents(count: Int): List<Event> {
-        val eventList = mutableListOf<Event>()
-        for (i in 1..count) {
-            val photoUrl = "https://unsplash.com/photos/aerial-view-of-a-rocky-beach-and-ocean-dDwRatblC1Y"
-            val name = faker.book().title()
-            val location = faker.address().city()
-            val date = LocalDate.now().plusDays(Random.nextLong(1, 30))
-            val type = faker.job().field()
-            val description = faker.lorem().sentence(10)
-
-            eventList.add(Event(photoUrl, name, location, date, type, description))
+    // Adds the event to the local favorites list immediately
+    private fun addFavoriteLocally(event: Event) {
+        val currentFav = _favorites.value?.toMutableList() ?: mutableListOf()
+        if (!currentFav.contains(event)) {
+            currentFav.add(event)
+            _favorites.postValue(currentFav)
         }
-        return eventList
     }
 
-    fun addEvent(newEvent: Event) {
-        val currentList = _events.value?.toMutableList() ?: mutableListOf()
-        currentList.add(0, newEvent)
-        _events.value = currentList // Update LiveData
+    // Removes the event from the local favorites list immediately
+    private fun removeFavoriteLocally(event: Event) {
+        val currentFav = _favorites.value?.toMutableList() ?: mutableListOf()
+        if (currentFav.contains(event)) {
+            currentFav.remove(event)
+            _favorites.postValue(currentFav)
+        }
     }
 
-    fun toggleFavoriteButton(event: Event) {
-        val currentFavorites = _favorite.value?.toMutableList() ?: mutableListOf()
-        if (currentFavorites.contains(event)) {
-            currentFavorites.remove(event) // Remove if already favorite
+    /**
+     * Toggle the favorite status for the given event.
+     * @param event The event object.
+     * @param eventKey The unique key of the event in Firebase.
+     */
+    fun toggleFavoriteButton(event: Event, eventKey: String?) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        if (eventKey == null) return
+
+        if (!isFavorite(event)) {
+            //add the event locally
+            addFavoriteLocally(event)
+
+            //ppdate the database to add the event as favorite
+            database.getReference("copenhagen_buzz/favorites")
+                .child(currentUserId)
+                .child(eventKey)
+                .setValue(event)
         } else {
-            currentFavorites.add(event) // Add if not favorite
+            //remove the event locally
+            removeFavoriteLocally(event)
+            //update the database to remove the event from favorites
+            database.getReference("copenhagen_buzz/favorites")
+                .child(currentUserId)
+                .child(eventKey)
+                .removeValue()
         }
-        _favorite.value = currentFavorites
     }
-
-    // Check if an event is in favorites
+    /**
+     * Checks if the given event is marked as favorite locally.
+     * (This may need to be updated to also listen to the Firebase favorites node.)
+     */
     fun isFavorite(event: Event): Boolean {
-        return _favorite.value?.contains(event) ?: false
+        return _favorites.value?.contains(event) ?: false
     }
 }

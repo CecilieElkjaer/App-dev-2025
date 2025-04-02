@@ -23,6 +23,9 @@
         <action
             android:id="@+id/action_timeline_to_calender"
             app:destination="@id/fragment_calender" />
+        <action
+            android:id="@+id/action_timeline_to_edit_event"
+            app:destination="@id/fragment_edit_event" />
     </fragment>
 
     <fragment
@@ -110,6 +113,29 @@
         <action
             android:id="@+id/action_calender_to_maps"
             app:destination="@id/fragment_maps" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_edit_event"
+        android:name="dk.itu.moapd.copenhagenbuzz.ceel.fragments.EditEventFragment"
+        android:label="@string/fragment_edit_event"
+        tools:layout="@layout/fragment_edit_event">
+
+        <action
+            android:id="@+id/action_edit_event_to_add_event"
+            app:destination="@id/fragment_add_event" />
+        <action
+            android:id="@+id/action_edit_event_to_timeline"
+            app:destination="@id/fragment_timeline" />
+        <action
+            android:id="@+id/action_edit_event_to_maps"
+            app:destination="@id/fragment_maps" />
+        <action
+            android:id="@+id/action_edit_event_to_calender"
+            app:destination="@id/fragment_calender" />
+        <action
+            android:id="@+id/action_edit_event_to_favorites"
+            app:destination="@id/fragment_favorites" />
     </fragment>
 
 </navigation>

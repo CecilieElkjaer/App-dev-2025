@@ -169,24 +169,4 @@ class MainActivity : AppCompatActivity() {
         val navController = (supportFragmentManager.findFragmentById(R.id.fragment_container_view) as NavHostFragment).navController
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
-
-
-    /*
-    /**
-     * Creates the options menu in the top app bar.
-     * This menu includes login/logout options, which change visibility
-     * based on the user's authentication status.
-     *
-     * @param menu The options menu in which items are placed.
-     * @return True if the menu is successfully created.
-     */
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.top_app_bar_menu, menu)
-
-        menu?.findItem(R.id.menu_login)?.isVisible = !isLoggedIn
-        menu?.findItem(R.id.menu_logout)?.isVisible = isLoggedIn
-        return true
-    }
-
-     */
 }
