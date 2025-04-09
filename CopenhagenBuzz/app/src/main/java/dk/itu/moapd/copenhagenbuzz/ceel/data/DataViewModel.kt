@@ -136,7 +136,7 @@ class DataViewModel : ViewModel() {
             //add the event locally
             addFavoriteLocally(event)
 
-            //ppdate the database to add the event as favorite
+            //update the database to add the event as favorite
             database.getReference("copenhagen_buzz/favorites")
                 .child(currentUserId)
                 .child(eventKey)

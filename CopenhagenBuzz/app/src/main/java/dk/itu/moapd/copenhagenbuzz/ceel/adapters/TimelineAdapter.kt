@@ -9,7 +9,9 @@ import com.firebase.ui.database.FirebaseListAdapter
 import com.firebase.ui.database.FirebaseListOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.database
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
@@ -52,6 +54,7 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
         val heartIcon: ImageView = view.findViewById(R.id.heart_icon)
         val editButton: MaterialButton = view.findViewById(R.id.button_edit_event)
         val infoButton: MaterialButton = view.findViewById(R.id.button_info_on_event)
+        val deleteButton: MaterialButton = view.findViewById(R.id.button_delete_event)
         private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         /**
@@ -103,8 +106,47 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
                         bundle
                     )
                 }
+
+                //show only delete button if the current user is the creater of that event.
+                deleteButton.visibility = View.VISIBLE
+                deleteButton.setOnClickListener{ view ->
+                    if (eventKey != null) {
+                        // Reference to the event in the "events" node.
+                        val eventRef = Firebase.database.getReference("copenhagen_buzz/events").child(eventKey)
+                        eventRef.removeValue().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                //after deleting the event from events, its entry should be removed from the favorites node across all users.
+                                val favoritesRef = Firebase.database.getReference("copenhagen_buzz/favorites")
+                                favoritesRef.get().addOnSuccessListener { snapshot ->
+                                    //a map for multi-path update: for each user having this event as favorite, set its path to null.
+                                    val updates = mutableMapOf<String, Any?>()
+                                    for (userSnapshot in snapshot.children) {
+                                        if (userSnapshot.hasChild(eventKey)) {
+                                            // Construct the full path: /<userId>/<eventKey>
+                                            updates["${userSnapshot.key}/$eventKey"] = null
+                                        }
+                                    }
+                                    if (updates.isNotEmpty()) {
+                                        favoritesRef.updateChildren(updates).addOnCompleteListener { favTask ->
+                                            if (!favTask.isSuccessful) {
+                                                Snackbar.make(view, "Event deleted but failed to update favorites: ${favTask.exception?.message}", Snackbar.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    } else {
+                                        Snackbar.make(view, "Event deleted successfully", Snackbar.LENGTH_SHORT).show()
+                                    }
+                                }.addOnFailureListener { error ->
+                                    Snackbar.make(view, "Failed to update favorites: ${error.message}", Snackbar.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Snackbar.make(view, "Failed to delete event: ${task.exception?.message}", Snackbar.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
             } else {
                 editButton.visibility = View.GONE
+                deleteButton.visibility = View.GONE
             }
 
             infoButton.setOnClickListener { view ->

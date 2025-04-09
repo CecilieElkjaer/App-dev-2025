@@ -43,4 +43,5 @@
     <string name="facebook_application_id">1360877908442521</string>
     <string name="fragment_edit_event">Edit Event</string>
     <string name="cancel_button_description">Cancel editing an event</string>
+    <string name="delete_event_button">Delete\n</string>
 </resources>
