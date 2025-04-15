@@ -5,27 +5,28 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:id="@+id/timeline_title"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sort_by_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/timeline"
-        android:textSize="30sp"
-        android:textStyle="bold"
+        android:text="@string/sort_by"
+        app:icon="@drawable/baseline_sort_24"
+        app:iconGravity="textStart"
+        app:iconPadding="@dimen/margin_standard"
+        app:iconTint="?attr/colorOnPrimary"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="16dp"/>
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <ListView
         android:id="@+id/timeline_list_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="8dp"
+        android:padding="@dimen/margin_standard"
         android:nestedScrollingEnabled="true"
         android:divider="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timeline_title" />
+        app:layout_constraintTop_toBottomOf="@id/sort_by_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
