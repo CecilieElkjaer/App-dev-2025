@@ -3,3 +3,6 @@ google-services.json
 
 #.env files
 .env
+
+#local properties (API key)
+local.properties

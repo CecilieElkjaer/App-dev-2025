@@ -31,5 +31,6 @@ class MyApplication: Application() {
         // Apply dynamic colors to activities if available.
         DynamicColors.applyToActivitiesIfAvailable(this)
         AppEventsLogger.activateApp(this)
+        SharedPreferenceUtil.saveLocationTrackingPref(this, false)
     }
 }

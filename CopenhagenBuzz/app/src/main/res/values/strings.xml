@@ -43,5 +43,15 @@
     <string name="facebook_application_id">1360877908442521</string>
     <string name="fragment_edit_event">Edit Event</string>
     <string name="cancel_button_description">Cancel editing an event</string>
-    <string name="delete_event_button">Delete\n</string>
+    <string name="delete_event_button">Delete</string>
+    <string name="preference_file_key">dk.itu.moapd.copenhagenbuzz.ceel.PREFERENCE_FILE_KEY</string>
+    <string name="text_latitude">Latitude</string>
+    <string name="text_longitude">Longitude</string>
+    <string name="text_not_available">Not available</string>
+    <string name="text_altitude">Altitude\n</string>
+    <string name="text_speed">Speed</string>
+    <string name="text_speed_km">%d KM</string>
+    <string name="text_time">Time</string>
+    <string name="button_start">Start</string>
+    <string name="button_stop">Stop</string>
 </resources>
