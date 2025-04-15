@@ -5,17 +5,15 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
-import android.os.Build.VERSION
 import androidx.fragment.app.Fragment
-
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,14 +32,9 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import dk.itu.moapd.copenhagenbuzz.ceel.R
-import dk.itu.moapd.copenhagenbuzz.ceel.SharedPreferenceUtil
-import dk.itu.moapd.copenhagenbuzz.ceel.SharedPreferenceUtil.toSimpleDateFormat
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
-import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentFavoritesBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentMapsBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.services.LocationService
-import java.security.AccessController.checkPermission
-import java.util.Locale
 
 class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener, OnMapReadyCallback {
     /**
@@ -49,20 +42,44 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
      */
     private inner class LocationBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val location = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            val location = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 intent.getParcelableExtra(LocationService.EXTRA_LOCATION, Location::class.java)
             else
                 @Suppress("DEPRECATION")
                 intent.getParcelableExtra(LocationService.EXTRA_LOCATION)
             location?.let {
-                updateLocationDetails(it)
+                updateLocation(it)
             }
         }
     }
 
+
+
+    private lateinit var googleMap: GoogleMap
     private var _binding: FragmentMapsBinding? = null
     private val binding get() = requireNotNull(_binding) {
         "Cannot access binding because it is null. Is the view visible?"
+    }
+
+    // BroadcastReceiver to receive location updates from LocationService.
+    private lateinit var locationBroadcastReceiver: LocationBroadcastReceiver
+    private lateinit var sharedPreferences: SharedPreferences
+    var hasCenteredMap = false
+
+    // Bind to the LocationService (retaining your location update functionality)
+    private var locationService: LocationService? = null
+    private var locationServiceBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as LocationService.LocalBinder
+            locationService = binder.service
+            locationServiceBound = true
+        }
+        override fun onServiceDisconnected(name: ComponentName) {
+            locationService = null
+            locationServiceBound = false
+        }
     }
 
     /**
@@ -70,28 +87,6 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
      */
     companion object {
         private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
-    }
-
-    private lateinit var googleMap: GoogleMap
-    private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var locationBroadcastReceiver: LocationBroadcastReceiver
-    private var locationService: LocationService? = null
-    private var locationServiceBound = false
-
-    /**
-     * Defines callbacks for service binding, passed to `bindService()`.
-     */
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            val binder = service as LocationService.LocalBinder
-            locationService = binder.service
-            locationServiceBound = true
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            locationService = null
-            locationServiceBound = false
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -102,27 +97,11 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get the SharedPreferences instance.
+        // Initialize SharedPreferences.
         sharedPreferences = requireActivity().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
-        // Initialize the broadcast receiver.
+        // Set up the location broadcast receiver.
         locationBroadcastReceiver = LocationBroadcastReceiver()
-
-        // Define the UI behavior using lambda expressions.
-        binding.buttonState?.setOnClickListener {
-            sharedPreferences.getBoolean(SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false).let { enabled ->
-                if (enabled) {
-                    resetLocationDetails()
-                    locationService?.unsubscribeToLocationUpdates()
-                } else {
-                    if (checkPermission()) {
-                        locationService?.subscribeToLocationUpdates()
-                    } else {
-                        requestUserPermissions()
-                    }
-                }
-            }
-        }
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
         mapFragment?.getMapAsync(this)
@@ -134,11 +113,19 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
 
-        // Add a marker for IT University of Copenhagen (teacher's sample)
+        // Add a marker for IT University of Copenhagen
         val itu = LatLng(55.6596, 12.5910)
         googleMap.addMarker(MarkerOptions().position(itu).title("IT University of Copenhagen"))
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 12f))
         googleMap.setPadding(0, 100, 0, 0)
+
+        googleMap.uiSettings.apply {
+            isScrollGesturesEnabled = true
+            isZoomGesturesEnabled = true
+            isRotateGesturesEnabled = true
+            isTiltGesturesEnabled = true
+            isZoomControlsEnabled = true
+        }
 
         // Enable MyLocation layer if permission is granted, else request it.
         if (checkPermission()) {
@@ -147,18 +134,24 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             requestUserPermissions()
         }
 
-        // Now load event markers from your database.
+        //load event markers from the firebase database.
         loadEventMarkers()
 
-        // Set marker click listener to display event details.
+        //Set marker click listener to display event details.
         googleMap.setOnMarkerClickListener { marker ->
             val event = marker.tag as? Event
             event?.let {
                 Snackbar.make(requireView(), "Event: ${it.eventName}\nType: ${it.eventType}", Snackbar.LENGTH_LONG).show()
             }
-            true // Consume the event.
+            true
+        }
+        googleMap.setOnCameraIdleListener {
+            // Log that the camera has come to a stop.
+            // This way you can see if any unexpected camera updates are happening.
+            Log.d("MapsFragment", "Camera is idle at: ${googleMap.cameraPosition.target}")
         }
     }
+
 
     /**
      * Load event markers from Firebase and add them to the GoogleMap.
@@ -183,6 +176,14 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
                 // Optionally, show an error message.
             }
         })
+    }
+
+    private fun updateLocation(location: Location) {
+        if (!hasCenteredMap) {
+            val userLatLng = LatLng(location.latitude, location.longitude)
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
+            hasCenteredMap = true
+        }
     }
 
     /**
@@ -210,56 +211,45 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             )
     }
 
-    /**
-     * Called when a shared preference is changed, added, or removed. This may be called even if a
-     * preference is set to its existing value. This callback will be run on the main thread.
-     */
+    override fun onStart() {
+        super.onStart()
+        // Register SharedPreferences change listener.
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        // Bind to the LocationService.
+        Intent(requireContext(), LocationService::class.java).let { intent ->
+            requireActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Register the location broadcast receiver.
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+            locationBroadcastReceiver,
+            android.content.IntentFilter(LocationService.ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)
+        )
+    }
+
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(locationBroadcastReceiver)
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (locationServiceBound) {
+            requireActivity().unbindService(serviceConnection)
+            locationServiceBound = false
+        }
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        super.onStop()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
-        if (key == SharedPreferenceUtil.KEY_FOREGROUND_ENABLED)
-            sharedPreferences.getBoolean(SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
-                .let(::updateButtonState)
+        // No specific UI update needed in the current map-only layout.
     }
-
-    /**
-     * Updates the text of the button based on the `trackingLocation` state.
-     *
-     * @param trackingLocation Boolean indicating whether the location tracking is active or not.
-     */
-    private fun updateButtonState(trackingLocation: Boolean) {
-        val buttonText = if (trackingLocation) R.string.button_stop else R.string.button_start
-        binding.buttonState?.text = getString(buttonText)
-    }
-
-    /**
-     * Updates the location details into the UI components. Sets the latitude, longitude, altitude,
-     * and speed in the respective EditTexts.
-     *
-     * @param location The location to be updated in the UI components.
-     */
-    private fun updateLocationDetails(location: Location) {
-        with(binding) {
-            editTextLatitude?.setText(String.format(Locale.getDefault(), "%.6f", location.latitude))
-            editTextLongitude?.setText(String.format(Locale.getDefault(), "%.6f", location.longitude))
-            editTextAltitude?.setText(String.format(Locale.getDefault(), "%.6f", location.altitude))
-            editTextSpeed?.setText(getString(R.string.text_speed_km, location.speed.toInt()))
-            editTextTime?.setText(location.time.toSimpleDateFormat())
-        }
-    }
-
-    /**
-     * Resets the location details into the UI components. Sets the latitude, longitude, altitude,
-     * and speed in the respective EditTexts.
-     */
-    private fun resetLocationDetails() {
-        with(binding) {
-            // Fill the event details into the UI components.
-            editTextLatitude?.setText(getString(R.string.text_not_available))
-            editTextLongitude?.setText(getString(R.string.text_not_available))
-            editTextAltitude?.setText(getString(R.string.text_not_available))
-            editTextSpeed?.setText(getString(R.string.text_not_available))
-            editTextTime?.setText(getString(R.string.text_not_available))
-        }
-    }
-
-
 }
