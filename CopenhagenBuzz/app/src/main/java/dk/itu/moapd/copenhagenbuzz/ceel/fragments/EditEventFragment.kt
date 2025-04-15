@@ -16,9 +16,11 @@ import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
+import dk.itu.moapd.copenhagenbuzz.ceel.data.EventLocation
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentEditEventBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DatePickerHelper
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DropDownHelper
+import dk.itu.moapd.copenhagenbuzz.ceel.helpers.LocationHelper
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,19 +84,23 @@ class EditEventFragment : Fragment() {
         // Set up the save button click listener.
         binding.fabEditEvent.setOnClickListener {
             if (validateInputs()) {
-                val updatedEvent = createUpdatedEvent()
-
-                // Update the event in Firebase using its unique key.
-                Firebase.database.getReference("copenhagen_buzz/events")
-                    .child(eventKey)
-                    .setValue(updatedEvent)
-                    .addOnSuccessListener {
-                        Snackbar.make(view, "Event updated successfully.", Snackbar.LENGTH_SHORT).show()
-                        requireActivity().supportFragmentManager.popBackStack()
+                createUpdatedEvent { updatedEvent ->
+                    if (updatedEvent == null) {
+                        Snackbar.make(view, "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        // Update the event in Firebase using its unique key.
+                        Firebase.database.getReference("copenhagen_buzz/events")
+                            .child(eventKey)
+                            .setValue(updatedEvent)
+                            .addOnSuccessListener {
+                                Snackbar.make(view, "Event updated successfully.", Snackbar.LENGTH_SHORT).show()
+                                requireActivity().supportFragmentManager.popBackStack()
+                            }
+                            .addOnFailureListener { error ->
+                                Snackbar.make(view, "Failed to update event: ${error.message}", Snackbar.LENGTH_SHORT).show()
+                            }
                     }
-                    .addOnFailureListener { error ->
-                        Snackbar.make(view, "Failed to update event: ${error.message}", Snackbar.LENGTH_SHORT).show()
-                    }
+                }
             } else {
                 Snackbar.make(view, "Please fill in all fields.", Snackbar.LENGTH_SHORT).show()
             }
@@ -104,7 +110,7 @@ class EditEventFragment : Fragment() {
     //Pre-fill the UI fields with the event data.
     private fun populateFields(event: Event) {
         binding.editTextEventName.setText(event.eventName)
-        binding.editTextEventLocation.setText(event.eventLocation)
+        binding.editTextEventLocation.setText(event.eventLocation.address)
 
         //set date
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -125,20 +131,41 @@ class EditEventFragment : Fragment() {
     }
 
     // Converts the user input into an updated Event object.
-    private fun createUpdatedEvent(): Event {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
-        val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
+    private fun createUpdatedEvent(callback: (Event?) -> Unit) {
+        // Get the updated address string from the EditText.
+        val updatedAddress = binding.editTextEventLocation.text.toString()
 
-        return Event(
-            eventPhoto = currentEvent.eventPhoto, // Retain existing photo or update if needed.
-            eventName = binding.editTextEventName.text.toString(),
-            eventLocation = binding.editTextEventLocation.text.toString(),
-            eventDate = timestamp,
-            eventType = binding.dropdownEventType.text.toString(),
-            eventDescription = binding.editTextEventDescription.text.toString(),
-            userId = currentEvent.userId
-        )
+        // Use the GeocodingHelper to convert the address into coordinates.
+        LocationHelper.getCoordinatesFromAddress(requireContext(), updatedAddress) { latitude, longitude ->
+            if (latitude == null || longitude == null) {
+                callback(null)
+            } else {
+                // Create a new EventLocation with the updated data.
+                val updatedEventLocation = EventLocation(
+                    latitude = latitude,
+                    longitude = longitude,
+                    address = updatedAddress
+                )
+
+                // Convert the date string (expected format "yyyy-MM-dd") to a Unix timestamp.
+                val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                val eventDate =
+                    LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
+                val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
+
+                // Build the updated Event instance.
+                val updatedEvent = Event(
+                    eventPhoto = currentEvent.eventPhoto, // Retain the existing photo.
+                    eventName = binding.editTextEventName.text.toString(),
+                    eventLocation = updatedEventLocation,
+                    eventDate = timestamp,
+                    eventType = binding.dropdownEventType.text.toString(),
+                    eventDescription = binding.editTextEventDescription.text.toString(),
+                    userId = currentEvent.userId
+                )
+                callback(updatedEvent)
+            }
+        }
     }
 
     override fun onDestroyView() {

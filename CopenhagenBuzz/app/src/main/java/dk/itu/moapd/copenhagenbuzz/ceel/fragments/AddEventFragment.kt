@@ -12,9 +12,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.database
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
+import dk.itu.moapd.copenhagenbuzz.ceel.data.EventLocation
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentAddEventBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DatePickerHelper
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DropDownHelper
+import dk.itu.moapd.copenhagenbuzz.ceel.helpers.LocationHelper
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -52,44 +54,47 @@ class AddEventFragment : Fragment() {
 
         binding.fabAddEvent.setOnClickListener {
             if (validateInputs()) {
-                //create event
-                val event = createEvent()
+                val inputAddress = binding.editTextEventLocation.text.toString()
 
-                Firebase.database.getReference("copenhagen_buzz/events").push().setValue(event)
-                    .addOnSuccessListener {
-                        Snackbar.make(
-                            requireView(),
-                            "Event '${event.eventName}' added!",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                        requireActivity().supportFragmentManager.popBackStack()
+                // Use GeocodingHelper to convert the address into coordinates.
+                LocationHelper.getCoordinatesFromAddress(requireContext(), inputAddress) { latitude, longitude ->
+                    if (latitude == null || longitude == null) {
+                        Snackbar.make(requireView(), "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        // Create an EventLocation instance with the retrieved coordinates.
+                        val eventLocation = EventLocation(
+                            latitude = latitude,
+                            longitude = longitude,
+                            address = inputAddress
+                        )
+                        // Create the Event instance.
+                        val event = createEvent(eventLocation)
+                        // Persist the Event in Firebase.
+                        Firebase.database.getReference("copenhagen_buzz/events").push().setValue(event)
+                            .addOnSuccessListener {
+                                Snackbar.make(requireView(), "Event '${event.eventName}' added!", Snackbar.LENGTH_SHORT).show()
+                                requireActivity().supportFragmentManager.popBackStack()
+                            }
+                            .addOnFailureListener { error ->
+                                Snackbar.make(requireView(), "Failed to add event: ${error.message}", Snackbar.LENGTH_SHORT).show()
+                            }
                     }
-                    .addOnFailureListener { error ->
-                        Snackbar.make(
-                            requireView(),
-                            "Failed to add event: ${error.message}",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                    }
+                }
             } else {
-                Snackbar.make(
-                    requireView(),
-                    "Please fill in all fields",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun validateInputs(): Boolean {
-        return binding.editTextEventDate.text.toString().isNotEmpty() &&
+        return binding.editTextEventName.text.toString().isNotEmpty() &&
                 binding.editTextEventLocation.text.toString().isNotEmpty() &&
                 binding.editTextEventDate.text.toString().isNotEmpty() &&
                 binding.dropdownEventType.text.toString().isNotEmpty() &&
                 binding.editTextEventDescription.text.toString().isNotEmpty()
     }
 
-    private fun createEvent(): Event {
+    private fun createEvent(location: EventLocation): Event {
         // Convert date string to Long
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
@@ -102,7 +107,7 @@ class AddEventFragment : Fragment() {
         return Event(
             eventPhoto = "res/drawable/mockevent_img.jpeg",
             eventName = binding.editTextEventName.text.toString(),
-            eventLocation = binding.editTextEventLocation.text.toString(),
+            eventLocation = location,
             eventDate = timestamp,
             eventType = binding.dropdownEventType.text.toString(),
             eventDescription = binding.editTextEventDescription.text.toString(),

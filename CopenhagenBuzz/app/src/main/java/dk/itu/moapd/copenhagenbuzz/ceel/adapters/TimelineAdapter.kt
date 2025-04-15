@@ -65,7 +65,10 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
         fun bind (event: Event, eventKey: String?){
             eventTitle.text = event.eventName
             eventType.text = event.eventType
-            eventLocation.text = event.eventLocation
+
+            //extracting the address of the event to show in the event cards.
+            eventLocation.text = event.eventLocation.address
+
             eventDate.text = dateFormatter.format(Date(event.eventDate))
             eventDescription.text = event.eventDescription
             eventImage.setImageResource(R.drawable.mockevent_img)

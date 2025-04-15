@@ -38,7 +38,7 @@ import java.time.LocalDate
 data class Event(
     var eventPhoto: String = "",
     var eventName: String = "",
-    var eventLocation: String = "",
+    var eventLocation: EventLocation = EventLocation(),
     var eventDate: Long = 0L,
     var eventType: String = "",
     var eventDescription: String = "",

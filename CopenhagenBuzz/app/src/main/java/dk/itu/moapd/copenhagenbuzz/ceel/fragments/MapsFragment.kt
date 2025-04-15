@@ -22,20 +22,28 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.SharedPreferenceUtil
 import dk.itu.moapd.copenhagenbuzz.ceel.SharedPreferenceUtil.toSimpleDateFormat
+import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentFavoritesBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentMapsBinding
 import dk.itu.moapd.copenhagenbuzz.ceel.services.LocationService
 import java.security.AccessController.checkPermission
 import java.util.Locale
 
-class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener, OnMapReadyCallback {
     /**
      * Receiver for location broadcasts from [LocationService].
      */
@@ -64,24 +72,10 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
     }
 
-    /**
-     * The SharedPreferences instance that can be used to save and retrieve data.
-     */
+    private lateinit var googleMap: GoogleMap
     private lateinit var sharedPreferences: SharedPreferences
-
-    /**
-     * Receiver for location broadcasts from [LocationService].
-     */
     private lateinit var locationBroadcastReceiver: LocationBroadcastReceiver
-
-    /**
-     * Provides location updates for while-in-use feature.
-     */
     private var locationService: LocationService? = null
-
-    /**
-     * A flag to indicate whether a bound to the service.
-     */
     private var locationServiceBound = false
 
     /**
@@ -100,9 +94,7 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View = FragmentMapsBinding.inflate(inflater, container, false).also {
         _binding = it
     }.root
@@ -111,8 +103,7 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         super.onViewCreated(view, savedInstanceState)
 
         // Get the SharedPreferences instance.
-        sharedPreferences = requireActivity()
-            .getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        sharedPreferences = requireActivity().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
         // Initialize the broadcast receiver.
         locationBroadcastReceiver = LocationBroadcastReceiver()
@@ -132,79 +123,66 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
                 }
             }
         }
+
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
     }
 
     /**
-     * Called when the Fragment is visible to the user. This is generally tied to
-     * `Activity.onStart()` of the containing Activity's lifecycle.
+     * Called when the GoogleMap is ready. Implements teacher's OnMapReadyCallback.
      */
-    override fun onStart() {
-        super.onStart()
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
 
-        // Update the UI to reflect the state of the service.
-        updateButtonState(
-            sharedPreferences.getBoolean(SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
-        )
+        // Add a marker for IT University of Copenhagen (teacher's sample)
+        val itu = LatLng(55.6596, 12.5910)
+        googleMap.addMarker(MarkerOptions().position(itu).title("IT University of Copenhagen"))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 12f))
+        googleMap.setPadding(0, 100, 0, 0)
 
-        // Register the shared preference change listener.
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        // Enable MyLocation layer if permission is granted, else request it.
+        if (checkPermission()) {
+            googleMap.isMyLocationEnabled = true
+        } else {
+            requestUserPermissions()
+        }
 
-        // Bind to the service.
-        Intent(requireContext(), LocationService::class.java).let { serviceIntent ->
-            requireActivity().bindService(
-                serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+        // Now load event markers from your database.
+        loadEventMarkers()
+
+        // Set marker click listener to display event details.
+        googleMap.setOnMarkerClickListener { marker ->
+            val event = marker.tag as? Event
+            event?.let {
+                Snackbar.make(requireView(), "Event: ${it.eventName}\nType: ${it.eventType}", Snackbar.LENGTH_LONG).show()
+            }
+            true // Consume the event.
         }
     }
 
     /**
-     * Called when the fragment is visible to the user and actively running. Tied
-     * to `Activity.onResume()` of the containing Activity's lifecycle.
+     * Load event markers from Firebase and add them to the GoogleMap.
      */
-    override fun onResume() {
-        super.onResume()
-
-        // Register the broadcast receiver.
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-            locationBroadcastReceiver,
-            IntentFilter(LocationService.ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)
-        )
-    }
-
-    /**
-     * Called when the Fragment is no longer resumed. Tied to `Activity.onPause()`
-     * of the containing Activity's lifecycle.
-     */
-    override fun onPause() {
-        // Unregister the broadcast receiver.
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(
-            locationBroadcastReceiver
-        )
-        super.onPause()
-    }
-
-    /**
-     * Called when the Fragment is no longer started. Tied to `Activity.onStop()`
-     * of the containing Activity's lifecycle.
-     */
-    override fun onStop() {
-        // Unbind from the service.
-        if (locationServiceBound) {
-            requireActivity().unbindService(serviceConnection)
-            locationServiceBound = false
-        }
-
-        // Unregister the shared preference change listener.
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
-        super.onStop()
-    }
-
-    /**
-     * Called when the view has been detached from the fragment. The next time the fragment needs to be displayed, a new view will be created.
-     * Called after `onStop()` and before `onDestroy()`.
-     */
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun loadEventMarkers() {
+        val eventsRef = Firebase.database.getReference("copenhagen_buzz/events")
+        eventsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                snapshot.children.forEach { child ->
+                    child.getValue(Event::class.java)?.let { event ->
+                        val position = LatLng(event.eventLocation.latitude, event.eventLocation.longitude)
+                        val marker = googleMap.addMarker(
+                            MarkerOptions().position(position).title(event.eventName)
+                                .snippet(event.eventType)
+                        )
+                        // Use the marker's tag to store the event so that it can be retrieved on click.
+                        marker?.tag = event
+                    }
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                // Optionally, show an error message.
+            }
+        })
     }
 
     /**
@@ -260,19 +238,10 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
      */
     private fun updateLocationDetails(location: Location) {
         with(binding) {
-            // Fill the event details into the UI components.
-            editTextLatitude?.setText(
-                String.format(Locale.getDefault(), "%.6f", location.latitude)
-            )
-            editTextLongitude?.setText(
-                String.format(Locale.getDefault(), "%.6f", location.longitude)
-            )
-            editTextAltitude?.setText(
-                String.format(Locale.getDefault(), "%.6f", location.altitude)
-            )
-            editTextSpeed?.setText(
-                getString(R.string.text_speed_km, location.speed.toInt())
-            )
+            editTextLatitude?.setText(String.format(Locale.getDefault(), "%.6f", location.latitude))
+            editTextLongitude?.setText(String.format(Locale.getDefault(), "%.6f", location.longitude))
+            editTextAltitude?.setText(String.format(Locale.getDefault(), "%.6f", location.altitude))
+            editTextSpeed?.setText(getString(R.string.text_speed_km, location.speed.toInt()))
             editTextTime?.setText(location.time.toSimpleDateFormat())
         }
     }
@@ -291,4 +260,6 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             editTextTime?.setText(getString(R.string.text_not_available))
         }
     }
+
+
 }
