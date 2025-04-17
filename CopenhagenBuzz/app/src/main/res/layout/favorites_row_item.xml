@@ -78,7 +78,6 @@
                 android:background="?colorSurfaceContainerLow"
                 android:scaleType="centerCrop"
                 android:contentDescription="@string/event_image"
-                android:src="@drawable/mockevent_img"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"

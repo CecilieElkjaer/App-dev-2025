@@ -12,6 +12,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.database
+import com.google.firebase.storage.storage
+import com.squareup.picasso.Picasso
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
@@ -27,7 +29,8 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
 
         //retrieve the ViewHolder (or create one if not available in the view tag)
         val viewHolder = (view.tag as? ViewHolder) ?: ViewHolder(view)
-        viewHolder.bind(event, eventKey)    }
+        viewHolder.bind(event, eventKey)
+    }
 
     /**
      * Updates the favorite icon, when an event is liked.
@@ -65,13 +68,17 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
         fun bind (event: Event, eventKey: String?){
             eventTitle.text = event.eventName
             eventType.text = event.eventType
-
-            //extracting the address of the event to show in the event cards.
             eventLocation.text = event.eventLocation.address
-
             eventDate.text = dateFormatter.format(Date(event.eventDate))
             eventDescription.text = event.eventDescription
-            eventImage.setImageResource(R.drawable.mockevent_img)
+
+            event.eventPhotoUrl?.let { url ->
+                Picasso.get().load(url)
+                    .rotate(90F)
+                    .placeholder(R.drawable.baseline_add_photo_alternate_24)
+                    .into(eventImage)
+            } ?: eventImage.setImageResource(R.drawable.mockevent_img)
+            //eventImage.setImageResource(R.drawable.mockevent_img)
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
             stateOfFavoriteIcon(heartIcon, event)

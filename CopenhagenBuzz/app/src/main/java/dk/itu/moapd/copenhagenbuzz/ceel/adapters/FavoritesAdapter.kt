@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.squareup.picasso.Picasso
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 
@@ -44,7 +45,13 @@ class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecycl
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
             //setting a default image resource (should be changed)
-            eventImage.setImageResource(R.drawable.mockevent_img)
+            event.eventPhotoUrl?.let { url ->
+                Picasso.get().load(url)
+                    .rotate(90F)
+                    .placeholder(R.drawable.baseline_add_photo_alternate_24)
+                    .into(eventImage)
+            } ?: eventImage.setImageResource(R.drawable.mockevent_img)
+            //eventImage.setImageResource(R.drawable.mockevent_img)
         }
     }
 }

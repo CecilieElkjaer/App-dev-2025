@@ -64,4 +64,7 @@ dependencies {
     implementation(libs.facebook.android.sdk)
     implementation(libs.dotenv.kotlin)
     implementation(libs.play.services.maps)
+    implementation(libs.firebase.ui.storage)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.picasso)
 }

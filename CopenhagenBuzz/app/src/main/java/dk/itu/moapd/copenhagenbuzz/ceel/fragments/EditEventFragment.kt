@@ -1,5 +1,6 @@
 package dk.itu.moapd.copenhagenbuzz.ceel.fragments
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -35,6 +36,13 @@ class EditEventFragment : Fragment() {
     private lateinit var datePickerHelper: DatePickerHelper
     private lateinit var dropdownHelper: DropDownHelper
     private val viewModel: DataViewModel by activityViewModels()
+
+    companion object {
+        private const val REQUEST_CAMERA_AND_STORAGE = 100
+    }
+
+    // Holds the URI if user chooses/captures a new photo
+    private var photoUri: Uri? = null
 
     // The unique key for the event in Firebase and the current event data.
     private lateinit var eventKey: String
@@ -155,7 +163,7 @@ class EditEventFragment : Fragment() {
 
                 // Build the updated Event instance.
                 val updatedEvent = Event(
-                    eventPhoto = currentEvent.eventPhoto, // Retain the existing photo.
+                    eventPhotoUrl = currentEvent.eventPhotoUrl, // Retain the existing photo.
                     eventName = binding.editTextEventName.text.toString(),
                     eventLocation = updatedEventLocation,
                     eventDate = timestamp,

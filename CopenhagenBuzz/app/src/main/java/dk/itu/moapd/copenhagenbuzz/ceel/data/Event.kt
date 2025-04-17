@@ -23,9 +23,6 @@
  */
 package dk.itu.moapd.copenhagenbuzz.ceel.data
 
-import dk.itu.moapd.copenhagenbuzz.ceel.R
-import java.time.LocalDate
-
 /**
  * Represents an event in the application.
  *
@@ -36,7 +33,7 @@ import java.time.LocalDate
  * @property eventDescription A brief description of the event.
  */
 data class Event(
-    var eventPhoto: String = "",
+    var eventPhotoUrl: String? = null,
     var eventName: String = "",
     var eventLocation: EventLocation = EventLocation(),
     var eventDate: Long = 0L,
