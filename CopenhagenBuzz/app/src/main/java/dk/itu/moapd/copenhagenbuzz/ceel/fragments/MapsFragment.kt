@@ -53,20 +53,18 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         }
     }
 
-
-
     private lateinit var googleMap: GoogleMap
     private var _binding: FragmentMapsBinding? = null
     private val binding get() = requireNotNull(_binding) {
         "Cannot access binding because it is null. Is the view visible?"
     }
 
-    // BroadcastReceiver to receive location updates from LocationService.
+    //broadcastReceiver to receive location updates from LocationService.
     private lateinit var locationBroadcastReceiver: LocationBroadcastReceiver
     private lateinit var sharedPreferences: SharedPreferences
     var hasCenteredMap = false
 
-    // Bind to the LocationService (retaining your location update functionality)
+    //bind to the LocationService (retaining your location update functionality)
     private var locationService: LocationService? = null
     private var locationServiceBound = false
 
@@ -97,10 +95,10 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize SharedPreferences.
+        //Initialize SharedPreferences.
         sharedPreferences = requireActivity().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
-        // Set up the location broadcast receiver.
+        //Set up the location broadcast receiver.
         locationBroadcastReceiver = LocationBroadcastReceiver()
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
@@ -127,7 +125,7 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             isZoomControlsEnabled = true
         }
 
-        // Enable MyLocation layer if permission is granted, else request it.
+        //enable MyLocation layer if permission is granted, else request it.
         if (checkPermission()) {
             googleMap.isMyLocationEnabled = true
         } else {
@@ -145,16 +143,11 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             }
             true
         }
-        googleMap.setOnCameraIdleListener {
-            // Log that the camera has come to a stop.
-            // This way you can see if any unexpected camera updates are happening.
-            Log.d("MapsFragment", "Camera is idle at: ${googleMap.cameraPosition.target}")
-        }
     }
 
 
     /**
-     * Load event markers from Firebase and add them to the GoogleMap.
+     * Load event markers from Firebase and add them to the GoogleMap on MapsFragment page.
      */
     private fun loadEventMarkers() {
         val eventsRef = Firebase.database.getReference("copenhagen_buzz/events")
@@ -164,20 +157,20 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
                     child.getValue(Event::class.java)?.let { event ->
                         val position = LatLng(event.eventLocation.latitude, event.eventLocation.longitude)
                         val marker = googleMap.addMarker(
-                            MarkerOptions().position(position).title(event.eventName)
-                                .snippet(event.eventType)
+                            MarkerOptions().position(position).title(event.eventName).snippet(event.eventType)
                         )
-                        // Use the marker's tag to store the event so that it can be retrieved on click.
+                        //uses the marker's tag to store the event so that it can be retrieved on click.
                         marker?.tag = event
                     }
                 }
             }
-            override fun onCancelled(error: DatabaseError) {
-                // Optionally, show an error message.
-            }
+            override fun onCancelled(error: DatabaseError) {}
         })
     }
 
+    /**
+     * Update to the location of the user
+     */
     private fun updateLocation(location: Location) {
         if (!hasCenteredMap) {
             val userLatLng = LatLng(location.latitude, location.longitude)
