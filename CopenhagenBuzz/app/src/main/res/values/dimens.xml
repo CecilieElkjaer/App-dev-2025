@@ -7,4 +7,8 @@
     <dimen name="button_width">90dp</dimen>
     <dimen name="button_height">50dp</dimen>
     <dimen name="stroke_width">1dp</dimen>
+    <dimen name="icon">40dp</dimen>
+    <dimen name="heart_icon">34dp</dimen>
+    <dimen name="height_text_field">170dp</dimen>
+    <dimen name="height_imageview">200dp</dimen>
 </resources>

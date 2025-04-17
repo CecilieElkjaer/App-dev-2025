@@ -30,7 +30,6 @@
                 android:id="@+id/event_type_icon"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_small"
                 android:gravity="center"
                 android:textColor="?attr/colorOnPrimary"
                 android:textSize="18sp"

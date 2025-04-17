@@ -9,6 +9,7 @@
         android:id="@+id/sort_by_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_medium"
         android:text="@string/sort_by"
         app:icon="@drawable/baseline_sort_24"
         app:iconGravity="textStart"
@@ -28,5 +29,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/sort_by_button" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
