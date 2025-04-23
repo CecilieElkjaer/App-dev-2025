@@ -28,7 +28,6 @@ class TimelineFragment : Fragment() {
     private lateinit var adapter: TimelineAdapter
 
     private lateinit var timelineListView: ListView
-    private lateinit var sortByButton: MaterialButton
     private val eventCategories = arrayOf("All", "Conference", "Workshop", "Concert", "Meetup", "Festival")
 
     private val binding get() = requireNotNull(_binding) {
@@ -43,9 +42,7 @@ class TimelineFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         timelineListView = binding.timelineListView
-        sortByButton = binding.sortByButton!!
-
-        sortByButton.text = "Sort by: All"
+        val sortByButton = binding.sortByButton
 
         // Set up click listener to show a PopupMenu with event categories.
         sortByButton.setOnClickListener {
@@ -89,9 +86,6 @@ class TimelineFragment : Fragment() {
             .setLayout(R.layout.event_row_item)
             .setLifecycleOwner(this)
             .build()
-
-        //if an adapter already exists, stop listening and clear it.
-        //adapter.stopListening()
 
         //create a new adapter instance with the newly updated options.
         adapter = TimelineAdapter(options, viewModel)

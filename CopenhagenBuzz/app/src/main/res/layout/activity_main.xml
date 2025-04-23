@@ -28,22 +28,15 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
+        <include
+            android:id="@+id/content_main"
+            layout="@layout/content_main"
             android:layout_height="0dp"
-            android:fillViewport="true"
-            android:layout_gravity="start"
-            android:scrollbars="vertical"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_width="match_parent"
             app:layout_constraintTop_toBottomOf="@id/top_app_bar"
             app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <include
-                android:id="@+id/content_main"
-                layout="@layout/content_main" />
-        </androidx.core.widget.NestedScrollView>
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"

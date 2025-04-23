@@ -67,7 +67,7 @@ class AddEventFragment : Fragment() {
         dropdownHelper = DropDownHelper(requireContext())
         dropdownHelper.setupEventTypeDropdown(binding.dropdownEventType)
 
-        binding.buttonCapturePhoto?.setOnClickListener {
+        binding.buttonCapturePhoto.setOnClickListener {
             if (checkPermissions()) {
                 launchCamera()
             } else {
@@ -75,7 +75,7 @@ class AddEventFragment : Fragment() {
             }
         }
 
-        binding.buttonSelectPhoto?.setOnClickListener {
+        binding.buttonSelectPhoto.setOnClickListener {
             if (checkPermissions()) {
                 pickImageLauncher.launch("image/*")
             } else {
@@ -85,23 +85,17 @@ class AddEventFragment : Fragment() {
 
         binding.fabAddEvent.setOnClickListener {
             if (validateInputs()) {
-                setLoading(true)
                 val inputAddress = binding.editTextEventLocation.text.toString()
 
                 // Use GeocodingHelper to convert the address into coordinates.
                 LocationHelper.getCoordinatesFromAddress(requireContext(), inputAddress) { latitude, longitude ->
                     if (latitude == null || longitude == null) {
-                        setLoading(false)
                         Snackbar.make(requireView(), "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
                     } else {
                         // Create an EventLocation instance with the retrieved coordinates.
-                        val eventLocation = EventLocation(
-                            latitude = latitude,
-                            longitude = longitude,
-                            address = inputAddress
-                        )
+                        val eventLocation = EventLocation(latitude = latitude, longitude = longitude, address = inputAddress)
 
-                        //Reserve a new key in Realtime Database
+                        //Reserve a new key in the Realtime Database
                         val eventsRef   = Firebase.database.getReference("copenhagen_buzz/events")
                         val newEventRef = eventsRef.push()
                         val eventKey    = newEventRef.key ?: run {
@@ -110,27 +104,26 @@ class AddEventFragment : Fragment() {
                         }
 
                         //Upload the photo to the Firebase Storage under "events/<eventKey>.jpg"
-                        val photo = photoUri!!
+                        val photo = photoUri
                         val storageRef = Firebase.storage.reference.child("events").child("$eventKey.jpg")
 
-                        storageRef.putFile(photo).continueWithTask{ uploadTask ->
-                            if (!uploadTask.isSuccessful) throw uploadTask.exception!!
-                            storageRef.downloadUrl
-                        }.addOnSuccessListener { downloadUri ->
-                            //create the event with the remote URL
-                            val event = createEvent(eventLocation, downloadUri)
+                        if (photo != null) {
+                            storageRef.putFile(photo).continueWithTask{ uploadTask ->
+                                if (!uploadTask.isSuccessful) throw uploadTask.exception!!
+                                storageRef.downloadUrl
+                            }.addOnSuccessListener { photoUrl ->
+                                //create the event with the remote URL
+                                val event = createEvent(eventLocation, photoUrl)
 
-                            //persist the event in the database
-                            newEventRef.setValue(event).addOnFailureListener { error ->
-                                setLoading(false)
-                                Snackbar.make(binding.root, "Save failed: ${error.message}", Snackbar.LENGTH_LONG).show()
+                                //persist the event in the database
+                                newEventRef.setValue(event).addOnFailureListener { error ->
+                                    Snackbar.make(binding.root, "Save failed: ${error.message}", Snackbar.LENGTH_LONG).show()
+                                }
+                                Snackbar.make(binding.root, "Event added!", Snackbar.LENGTH_SHORT).show()
+                                requireActivity().supportFragmentManager.popBackStack()
+                            }.addOnFailureListener { error ->
+                                Snackbar.make(requireView(), "Photo upload failed: ${error.message}", Snackbar.LENGTH_SHORT).show()
                             }
-                            setLoading(false)
-                            Snackbar.make(binding.root, "Event added!", Snackbar.LENGTH_SHORT).show()
-                            requireActivity().supportFragmentManager.popBackStack()
-                        }.addOnFailureListener { error ->
-                            setLoading(false)
-                            Snackbar.make(requireView(), "Photo upload failed: ${error.message}", Snackbar.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -145,8 +138,7 @@ class AddEventFragment : Fragment() {
                 binding.editTextEventLocation.text.toString().isNotEmpty() &&
                 binding.editTextEventDate.text.toString().isNotEmpty() &&
                 binding.dropdownEventType.text.toString().isNotEmpty() &&
-                binding.editTextEventDescription.text.toString().isNotEmpty() &&
-                photoUri != null
+                binding.editTextEventDescription.text.toString().isNotEmpty()
     }
 
     private fun createEvent(location: EventLocation, photoUrl: Uri?): Event {
@@ -176,14 +168,13 @@ class AddEventFragment : Fragment() {
             put(MediaStore.Images.Media.DISPLAY_NAME,"event_${System.currentTimeMillis()}.jpg")
             put(MediaStore.Images.Media.MIME_TYPE,"image/jpeg")
         }
-        photoUri = requireContext().contentResolver.insert(imageCollection,cv)
+        photoUri = requireContext().contentResolver.insert(imageCollection, cv)
         if (photoUri != null) {
             takePictureLauncher.launch(photoUri)
         } else {
             Snackbar.make(requireView(),"Failed to create image URI", Snackbar.LENGTH_SHORT).show()
         }
     }
-
 
     /**
      * Launcher to capture a photo into our photoUri
@@ -202,7 +193,7 @@ class AddEventFragment : Fragment() {
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             photoUri = it
-            binding.imagePreview?.setImageURI(it)
+            binding.imagePreview.setImageURI(it)
         }
     }
 
@@ -235,26 +226,20 @@ class AddEventFragment : Fragment() {
     }
 
     /** Handle the user’s response to the permission request */
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CAMERA_AND_STORAGE) {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 // Permissions granted – ask user to tap again
-                Snackbar.make(binding.root,
-                    "Permissions granted, please tap again",
-                    Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Permissions granted, please tap again", Snackbar.LENGTH_SHORT).show()
             } else {
-                Snackbar.make(binding.root,
-                    "Camera & storage permissions are required",
-                    Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, "Camera & storage permissions are required", Snackbar.LENGTH_LONG).show()
             }
         }
     }
 
     private fun setLoading(loading: Boolean) {
-        binding.progressSpinner?.visibility = if (loading) View.VISIBLE else View.GONE
+        binding.progressSpinner.visibility = if (loading) View.VISIBLE else View.GONE
         // optionally disable the form so users can’t double‑tap
         binding.fabAddEvent.isEnabled = !loading
     }

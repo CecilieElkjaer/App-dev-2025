@@ -72,13 +72,16 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
             eventDate.text = dateFormatter.format(Date(event.eventDate))
             eventDescription.text = event.eventDescription
 
+            //fetching the photourl of the event from the storage
             event.eventPhotoUrl?.let { url ->
                 Picasso.get().load(url)
+                    .resize(500, 800)
                     .rotate(90F)
                     .placeholder(R.drawable.baseline_add_photo_alternate_24)
                     .into(eventImage)
             } ?: eventImage.setImageResource(R.drawable.mockevent_img)
-            //eventImage.setImageResource(R.drawable.mockevent_img)
+
+            //setting the icon of the event to first letter of the event (by default "E")
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
             stateOfFavoriteIcon(heartIcon, event)
@@ -132,7 +135,6 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
                                     val updates = mutableMapOf<String, Any?>()
                                     for (userSnapshot in snapshot.children) {
                                         if (userSnapshot.hasChild(eventKey)) {
-                                            // Construct the full path: /<userId>/<eventKey>
                                             updates["${userSnapshot.key}/$eventKey"] = null
                                         }
                                     }
@@ -160,8 +162,7 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
             }
 
             infoButton.setOnClickListener { view ->
-                Snackbar.make(view, "Info button clicked for event: ${event.eventName}", Snackbar.LENGTH_SHORT)
-                    .show()
+                Snackbar.make(view, "Info button clicked for event: ${event.eventName}. There is no more info on this event :)", Snackbar.LENGTH_SHORT).show()
             }
         }
     }

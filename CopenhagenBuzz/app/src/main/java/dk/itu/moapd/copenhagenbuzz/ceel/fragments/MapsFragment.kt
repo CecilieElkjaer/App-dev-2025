@@ -93,7 +93,6 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         //Initialize SharedPreferences.
         sharedPreferences = requireActivity().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 

@@ -47,6 +47,7 @@ class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecycl
             //setting a default image resource (should be changed)
             event.eventPhotoUrl?.let { url ->
                 Picasso.get().load(url)
+                    .resize(500, 800)
                     .rotate(90F)
                     .placeholder(R.drawable.baseline_add_photo_alternate_24)
                     .into(eventImage)

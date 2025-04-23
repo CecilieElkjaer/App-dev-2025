@@ -55,7 +55,7 @@
     <string name="button_start">Start</string>
     <string name="button_stop">Stop</string>
     <string name="sort_by_category">Sort by category</string>
-    <string name="sort_by">Sort by:</string>
+    <string name="sort_by">Sort by: All</string>
     <string name="image_preview_desc">Image Preview</string>
     <string name="capture_photo">Capture Photo</string>
     <string name="select_from_gallery">Select from Gallery</string>

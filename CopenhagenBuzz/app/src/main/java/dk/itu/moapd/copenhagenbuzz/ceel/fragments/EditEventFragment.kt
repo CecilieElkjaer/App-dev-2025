@@ -1,11 +1,18 @@
 package dk.itu.moapd.copenhagenbuzz.ceel.fragments
 
+import android.Manifest
+import android.content.ContentValues
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -14,11 +21,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.squareup.picasso.Picasso
 import dk.itu.moapd.copenhagenbuzz.ceel.R
 import dk.itu.moapd.copenhagenbuzz.ceel.data.DataViewModel
 import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 import dk.itu.moapd.copenhagenbuzz.ceel.data.EventLocation
 import dk.itu.moapd.copenhagenbuzz.ceel.databinding.FragmentEditEventBinding
+import dk.itu.moapd.copenhagenbuzz.ceel.fragments.AddEventFragment.Companion
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DatePickerHelper
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.DropDownHelper
 import dk.itu.moapd.copenhagenbuzz.ceel.helpers.LocationHelper
@@ -65,8 +74,23 @@ class EditEventFragment : Fragment() {
         dropdownHelper = DropDownHelper(requireContext())
         dropdownHelper.setupEventTypeDropdown(binding.dropdownEventType)
 
-        // Retrieve eventKey and currentEvent from arguments.
-        // This assumes that the Event class implements Parcelable.
+        binding.editEventButtonCapturePhoto.setOnClickListener {
+            if (checkPermissions()) {
+                launchCamera()
+            } else {
+                requestPermissions()
+            }
+        }
+
+        binding.editEventButtonSelectPhoto.setOnClickListener {
+            if (checkPermissions()) {
+                pickImageLauncher.launch("image/*")
+            } else {
+                requestPermissions()
+            }
+        }
+
+        // Retrieve eventKey from arguments.
         eventKey = requireArguments().getString("eventKey") ?: ""
 
         // Fetch the event data from our Firebase Realtime Database
@@ -78,14 +102,10 @@ class EditEventFragment : Fragment() {
 
                     //calling function to prefill the fields for the event, that the user are trying to edit.
                     populateFields(currentEvent)
-                } else {
-                    Snackbar.make(view, "Event not found.", Snackbar.LENGTH_SHORT).show()
-                    // Optionally, navigate back.
                 }
             }
             override fun onCancelled(error: DatabaseError) {
-                Snackbar.make(view, "Error loading event: ${error.message}", Snackbar.LENGTH_SHORT)
-                    .show()
+                Snackbar.make(view, "Error loading event: ${error.message}", Snackbar.LENGTH_SHORT).show()
             }
         })
 
@@ -96,17 +116,8 @@ class EditEventFragment : Fragment() {
                     if (updatedEvent == null) {
                         Snackbar.make(view, "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
                     } else {
-                        // Update the event in Firebase using its unique key.
-                        Firebase.database.getReference("copenhagen_buzz/events")
-                            .child(eventKey)
-                            .setValue(updatedEvent)
-                            .addOnSuccessListener {
-                                Snackbar.make(view, "Event updated successfully.", Snackbar.LENGTH_SHORT).show()
-                                requireActivity().supportFragmentManager.popBackStack()
-                            }
-                            .addOnFailureListener { error ->
-                                Snackbar.make(view, "Failed to update event: ${error.message}", Snackbar.LENGTH_SHORT).show()
-                            }
+                        //Update the event in Firebase using its unique key.
+                        saveEventToDatabase(updatedEvent)
                     }
                 }
             } else {
@@ -124,6 +135,16 @@ class EditEventFragment : Fragment() {
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val dateString = java.util.Date(currentEvent.eventDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
         binding.editTextEventDate.setText(dateString)
+
+        if (event.eventPhotoUrl?.isNotBlank() == true) {
+            photoUri = Uri.parse(event.eventPhotoUrl)
+            Picasso.get()
+                .load(event.eventPhotoUrl)
+                .resize(500, 800)
+                .rotate(90F)
+                .placeholder(R.drawable.baseline_add_photo_alternate_24)
+                .into(binding.editEventImagePreview)
+        }
 
         binding.dropdownEventType.setText(event.eventType)
         binding.editTextEventDescription.setText(event.eventDescription)
@@ -157,13 +178,12 @@ class EditEventFragment : Fragment() {
 
                 // Convert the date string (expected format "yyyy-MM-dd") to a Unix timestamp.
                 val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                val eventDate =
-                    LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
+                val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
                 val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
 
                 // Build the updated Event instance.
                 val updatedEvent = Event(
-                    eventPhotoUrl = currentEvent.eventPhotoUrl, // Retain the existing photo.
+                    eventPhotoUrl = photoUri.toString(),
                     eventName = binding.editTextEventName.text.toString(),
                     eventLocation = updatedEventLocation,
                     eventDate = timestamp,
@@ -174,6 +194,79 @@ class EditEventFragment : Fragment() {
                 callback(updatedEvent)
             }
         }
+    }
+
+    private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && photoUri != null) {
+            binding.editEventImagePreview.setImageURI(photoUri)
+        } else {
+            Snackbar.make(binding.root, "Camera cancelled or failed", Snackbar.LENGTH_SHORT).show()
+        }
+    }
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            photoUri = it
+            binding.editEventImagePreview.setImageURI(it)
+        }
+    }
+
+    /** Creates a Content URI and launches the camera. */
+    private fun launchCamera() {
+        val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val cv = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "event_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        }
+
+        photoUri = requireContext().contentResolver.insert(collection, cv)
+        if (photoUri != null) {
+            takePictureLauncher.launch(photoUri)
+        } else {
+            Snackbar.make(requireView(),"Failed to create image URI", Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    /** Writes the Event under its `eventKey` and then navigates back. */
+    private fun saveEventToDatabase(event: Event) {
+        Firebase.database.getReference("copenhagen_buzz/events")
+            .child(eventKey)
+            .setValue(event)
+            .addOnSuccessListener {
+                Snackbar.make(binding.root, "Event updated!", Snackbar.LENGTH_SHORT).show()
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+            .addOnFailureListener { e ->
+                Snackbar.make(binding.root, "Update failed: ${e.message}", Snackbar.LENGTH_LONG).show()
+            }
+    }
+
+    /** Returns true if both CAMERA and READ_EXTERNAL_STORAGE are granted. */
+    private fun checkPermissions(): Boolean {
+        val cam = ActivityCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val read = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ActivityCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        return cam && read
+    }
+
+    private fun requestPermissions() {
+        val perms = mutableListOf(Manifest.permission.CAMERA).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+                add(Manifest.permission.READ_MEDIA_IMAGES)
+            } else {
+                add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+        ActivityCompat.requestPermissions(requireActivity(), perms.toTypedArray(), REQUEST_CAMERA_AND_STORAGE)
     }
 
     override fun onDestroyView() {
