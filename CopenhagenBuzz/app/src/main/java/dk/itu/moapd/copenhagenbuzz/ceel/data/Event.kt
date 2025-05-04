@@ -24,13 +24,15 @@
 package dk.itu.moapd.copenhagenbuzz.ceel.data
 
 /**
- * Represents an event in the application.
+ * Represents a single event in the application.
  *
+ * @property eventPhotoUrl URL pointing to an image for this event. Defaults to `null` when no photo has been uploaded.
  * @property eventName The name of the event.
- * @property eventLocation The location where the event takes place.
- * @property eventDate The date of the event in YYYY-MM-DD format.
+ * @property eventLocation Instance of [EventLocation] detailing the geographic coordinates and address where the event takes place.
+ * @property eventDate Epoch-milliseconds timestamp representing the event’s start date/time
  * @property eventType The category or type of the event.
  * @property eventDescription A brief description of the event.
+ * @property userId An id reference to the user, that has created this event
  */
 data class Event(
     var eventPhotoUrl: String? = null,

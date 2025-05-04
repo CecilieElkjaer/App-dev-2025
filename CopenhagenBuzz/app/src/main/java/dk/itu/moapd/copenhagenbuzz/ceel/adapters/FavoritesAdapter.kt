@@ -15,9 +15,7 @@ import dk.itu.moapd.copenhagenbuzz.ceel.data.Event
 class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecyclerAdapter<Event, FavoritesAdapter.ViewHolder>(options) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(
-            R.layout.favorites_row_item, parent, false
-        )
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.favorites_row_item, parent, false)
         return ViewHolder(view)
     }
 
@@ -44,7 +42,7 @@ class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecycl
             //displaying the first letter of the event type or a default "E"
             eventTypeIcon.text = event.eventType.firstOrNull()?.toString() ?: "E"
 
-            //setting a default image resource (should be changed)
+            //retrieving the photo of the event from the storage by using Picasso.
             event.eventPhotoUrl?.let { url ->
                 Picasso.get().load(url)
                     .resize(500, 800)
@@ -52,7 +50,6 @@ class FavoritesAdapter(options: FirebaseRecyclerOptions<Event>) : FirebaseRecycl
                     .placeholder(R.drawable.baseline_add_photo_alternate_24)
                     .into(eventImage)
             } ?: eventImage.setImageResource(R.drawable.mockevent_img)
-            //eventImage.setImageResource(R.drawable.mockevent_img)
         }
     }
 }

@@ -214,7 +214,7 @@ class MapsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onResume() {
         super.onResume()
-        // Register the location broadcast receiver.
+        //registers the location broadcast receiver.
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
             locationBroadcastReceiver,
             android.content.IntentFilter(LocationService.ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)

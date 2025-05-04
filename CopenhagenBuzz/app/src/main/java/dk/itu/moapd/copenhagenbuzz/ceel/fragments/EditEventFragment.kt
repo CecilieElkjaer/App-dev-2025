@@ -90,10 +90,10 @@ class EditEventFragment : Fragment() {
             }
         }
 
-        // Retrieve eventKey from arguments.
+        //retrieve eventKey from arguments.
         eventKey = requireArguments().getString("eventKey") ?: ""
 
-        // Fetch the event data from our Firebase Realtime Database
+        //fetch the event data from our Firebase Realtime Database
         val eventRef = Firebase.database.getReference("copenhagen_buzz/events").child(eventKey)
         eventRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -126,7 +126,9 @@ class EditEventFragment : Fragment() {
         }
     }
 
-    //Pre-fill the UI fields with the event data.
+    /**
+     * Pre-fill the UI fields with the event data.
+     */
     private fun populateFields(event: Event) {
         binding.editTextEventName.setText(event.eventName)
         binding.editTextEventLocation.setText(event.eventLocation.address)
@@ -136,6 +138,7 @@ class EditEventFragment : Fragment() {
         val dateString = java.util.Date(currentEvent.eventDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
         binding.editTextEventDate.setText(dateString)
 
+        //retrieve the photo of this event by using Picasso
         if (event.eventPhotoUrl?.isNotBlank() == true) {
             photoUri = Uri.parse(event.eventPhotoUrl)
             Picasso.get()
@@ -150,7 +153,9 @@ class EditEventFragment : Fragment() {
         binding.editTextEventDescription.setText(event.eventDescription)
     }
 
-    // Checks that none of the fields are empty.
+    /**
+     * Checks that none of the fields are empty.
+     */
     private fun validateInputs(): Boolean {
         return binding.editTextEventName.text.toString().isNotEmpty() &&
                 binding.editTextEventLocation.text.toString().isNotEmpty() &&
@@ -159,7 +164,9 @@ class EditEventFragment : Fragment() {
                 binding.editTextEventDescription.text.toString().isNotEmpty()
     }
 
-    // Converts the user input into an updated Event object.
+    /**
+     * Converts the user input into an updated Event.
+     */
     private fun createUpdatedEvent(callback: (Event?) -> Unit) {
         // Get the updated address string from the EditText.
         val updatedAddress = binding.editTextEventLocation.text.toString()
@@ -179,7 +186,7 @@ class EditEventFragment : Fragment() {
                 // Convert the date string (expected format "yyyy-MM-dd") to a Unix timestamp.
                 val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
-                val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
+                val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
                 // Build the updated Event instance.
                 val updatedEvent = Event(
@@ -196,6 +203,9 @@ class EditEventFragment : Fragment() {
         }
     }
 
+    /**
+     * Launcher to capture a photo into our photoUri
+     */
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && photoUri != null) {
             binding.editEventImagePreview.setImageURI(photoUri)
@@ -203,6 +213,10 @@ class EditEventFragment : Fragment() {
             Snackbar.make(binding.root, "Camera cancelled or failed", Snackbar.LENGTH_SHORT).show()
         }
     }
+
+    /**
+     * Launcher to pick an image from gallery
+     */
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             photoUri = it
@@ -210,7 +224,9 @@ class EditEventFragment : Fragment() {
         }
     }
 
-    /** Creates a Content URI and launches the camera. */
+    /**
+     * Creates a Content URI and launches the camera.
+     */
     private fun launchCamera() {
         val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val cv = ContentValues().apply {
@@ -226,7 +242,9 @@ class EditEventFragment : Fragment() {
         }
     }
 
-    /** Writes the Event under its `eventKey` and then navigates back. */
+    /**
+     * Writes the Event under its `eventKey` and then navigates back.
+     */
     private fun saveEventToDatabase(event: Event) {
         Firebase.database.getReference("copenhagen_buzz/events")
             .child(eventKey)
@@ -240,7 +258,9 @@ class EditEventFragment : Fragment() {
             }
     }
 
-    /** Returns true if both CAMERA and READ_EXTERNAL_STORAGE are granted. */
+    /**
+     * Returns true if both CAMERA and READ_EXTERNAL_STORAGE are granted.
+     */
     private fun checkPermissions(): Boolean {
         val cam = ActivityCompat.checkSelfPermission(
             requireContext(), Manifest.permission.CAMERA
@@ -258,6 +278,9 @@ class EditEventFragment : Fragment() {
         return cam && read
     }
 
+    /**
+     * Request permissions from the user to use the camera or the library
+     */
     private fun requestPermissions() {
         val perms = mutableListOf(Manifest.permission.CAMERA).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){

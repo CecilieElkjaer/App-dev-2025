@@ -63,13 +63,13 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
 
-        // Migrate from Kotlin synthetics to Jetpack view binding.
+        //migrate to Jetpack view binding.
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
 
-        // Inflate the user interface into the current activity.
+        //inflate the user interface into the current activity.
         setContentView(mainBinding.root)
 
-        // Initialize Firebase Auth.
+        //initialize Firebase Auth.
         auth = FirebaseAuth.getInstance()
 
         setupNavigation()
@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startLoginActivity() {
+        //explicit intent
         Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }.let(::startActivity)
@@ -99,28 +100,27 @@ class MainActivity : AppCompatActivity() {
         val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
         navController.graph = navGraph
 
+        //setup drawerLayout
         val drawerLayout = mainBinding.drawerLayout
         appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
 
-        //set up the top app bar for landscape and portrait mode
+        //set up the top app bar for portrait mode
         if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             setSupportActionBar(mainBinding.topAppBar)
             setupActionBarWithNavController(navController, appBarConfiguration)
-        } else if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE){
-            mainBinding.topAppBarLand?.setupWithNavController(navController)
         }
 
         //setup bottomnavigation for landscape and portrait mode
         mainBinding.bottomNavigation?.setupWithNavController(navController)
         mainBinding.bottomNavigationRail?.setupWithNavController(navController)
 
-        //setup NavigationView/Drawer
+        //setup view for navigation
         mainBinding.navigationView.setupWithNavController(navController)
     }
 
     private fun updateNavigationHeader(){
         //Setup of NavigationView and populate the Header in the NavigationView dynamically.
-        val headerView = mainBinding.navigationView?.getHeaderView(0)
+        val headerView = mainBinding.navigationView.getHeaderView(0)
         val profileImage = headerView?.findViewById<ImageView>(R.id.profile_image)
         val profileName = headerView?.findViewById<TextView>(R.id.profile_name)
         val profileEmail = headerView?.findViewById<TextView>(R.id.profile_email)
@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*
+    /**
         Sets what is needed to be shown for each user. A guest user should not be able to add events.
         Therefore the fragment add event, account and event history will be hidden.
      */

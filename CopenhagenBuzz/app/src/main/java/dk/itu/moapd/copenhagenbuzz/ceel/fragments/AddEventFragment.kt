@@ -83,22 +83,23 @@ class AddEventFragment : Fragment() {
             }
         }
 
+        //clicking the add event button, propagates the following
         binding.fabAddEvent.setOnClickListener {
             if (validateInputs()) {
                 val inputAddress = binding.editTextEventLocation.text.toString()
 
-                // Use GeocodingHelper to convert the address into coordinates.
+                //uses GeocodingHelper to convert the address into coordinates.
                 LocationHelper.getCoordinatesFromAddress(requireContext(), inputAddress) { latitude, longitude ->
                     if (latitude == null || longitude == null) {
                         Snackbar.make(requireView(), "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
                     } else {
-                        // Create an EventLocation instance with the retrieved coordinates.
+                        //create an EventLocation instance with the retrieved coordinates.
                         val eventLocation = EventLocation(latitude = latitude, longitude = longitude, address = inputAddress)
 
                         //Reserve a new key in the Realtime Database
-                        val eventsRef   = Firebase.database.getReference("copenhagen_buzz/events")
+                        val eventsRef = Firebase.database.getReference("copenhagen_buzz/events")
                         val newEventRef = eventsRef.push()
-                        val eventKey    = newEventRef.key ?: run {
+                        val eventKey = newEventRef.key ?: run {
                             Snackbar.make(requireView(), "Failed to generate event key", Snackbar.LENGTH_SHORT).show()
                             return@getCoordinatesFromAddress
                         }
@@ -133,6 +134,9 @@ class AddEventFragment : Fragment() {
         }
     }
 
+    /**
+     * Input fields are being validated to check if user has inputted all the needed information for the event.
+     */
     private fun validateInputs(): Boolean {
         return binding.editTextEventName.text.toString().isNotEmpty() &&
                 binding.editTextEventLocation.text.toString().isNotEmpty() &&
@@ -141,16 +145,19 @@ class AddEventFragment : Fragment() {
                 binding.editTextEventDescription.text.toString().isNotEmpty()
     }
 
+    /**
+     * Creates the event with needed information
+     */
     private fun createEvent(location: EventLocation, photoUrl: Uri?): Event {
-        // Convert date string to Long
+        //convert date string to Long
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
-        val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond()
+        val timestamp = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        // Retrieve user id
+        //retrieve user id
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-        // Create an Event object
+        //create an Event object
         return Event(
             eventPhotoUrl = photoUrl?.toString(),
             eventName = binding.editTextEventName.text.toString(),
@@ -162,6 +169,9 @@ class AddEventFragment : Fragment() {
         )
     }
 
+    /**
+     * Creates a Content URI and launches the camera.
+     */
     private fun launchCamera() {
         val imageCollection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val cv = ContentValues().apply {
@@ -197,7 +207,9 @@ class AddEventFragment : Fragment() {
         }
     }
 
-    /** Returns true if both CAMERA and READ_EXTERNAL_STORAGE are granted. */
+    /**
+     * Returns true if both CAMERA and READ_EXTERNAL_STORAGE are granted.
+     */
     private fun checkPermissions(): Boolean {
         val cam = ActivityCompat.checkSelfPermission(
             requireContext(), Manifest.permission.CAMERA
@@ -215,6 +227,9 @@ class AddEventFragment : Fragment() {
         return cam && read
     }
 
+    /**
+     * Request permissions from the user to use the camera or the library
+     */
     private fun requestPermissions() {
         val perms = mutableListOf(Manifest.permission.CAMERA)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -225,7 +240,9 @@ class AddEventFragment : Fragment() {
         ActivityCompat.requestPermissions(requireActivity(), perms.toTypedArray(), REQUEST_CAMERA_AND_STORAGE)
     }
 
-    /** Handle the user’s response to the permission request */
+    /**
+     * Handle the user’s response to the permission request
+     * */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CAMERA_AND_STORAGE) {
@@ -236,12 +253,6 @@ class AddEventFragment : Fragment() {
                 Snackbar.make(binding.root, "Camera & storage permissions are required", Snackbar.LENGTH_LONG).show()
             }
         }
-    }
-
-    private fun setLoading(loading: Boolean) {
-        binding.progressSpinner.visibility = if (loading) View.VISIBLE else View.GONE
-        // optionally disable the form so users can’t double‑tap
-        binding.fabAddEvent.isEnabled = !loading
     }
 
     override fun onDestroyView() {

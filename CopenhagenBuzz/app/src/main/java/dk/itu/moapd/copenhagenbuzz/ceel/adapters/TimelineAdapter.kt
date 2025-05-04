@@ -72,7 +72,7 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
             eventDate.text = dateFormatter.format(Date(event.eventDate))
             eventDescription.text = event.eventDescription
 
-            //fetching the photourl of the event from the storage
+            //fetching the photourl of the event from the storage by using Picasso
             event.eventPhotoUrl?.let { url ->
                 Picasso.get().load(url)
                     .resize(500, 800)
@@ -92,15 +92,13 @@ class TimelineAdapter(options: FirebaseListOptions<Event>, private val viewModel
                     if (!viewModel.isFavorite(event)) {
                         //change icon and show added snackbar
                         heartIcon.setImageResource(R.drawable.baseline_favorite_like_24)
-                        Snackbar.make(view, "${event.eventName} added to favorites", Snackbar.LENGTH_SHORT)
-                            .show()
+                        Snackbar.make(view, "${event.eventName} added to favorites", Snackbar.LENGTH_SHORT).show()
                     } else {
                         //change icon and show removed snackbar
                         heartIcon.setImageResource(R.drawable.baseline_favorite_border_24)
-                        Snackbar.make(view, "${event.eventName} removed from favorites", Snackbar.LENGTH_SHORT)
-                            .show()
+                        Snackbar.make(view, "${event.eventName} removed from favorites", Snackbar.LENGTH_SHORT).show()
                     }
-                    // Use the toggle which updates both local state and Firebase
+                    // Use the toggle which updates both local state and Firebase database
                     viewModel.toggleFavoriteButton(event, eventKey)
                 }
             }

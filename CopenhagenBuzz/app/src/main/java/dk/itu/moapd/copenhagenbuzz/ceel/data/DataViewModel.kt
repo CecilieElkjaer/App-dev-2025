@@ -23,16 +23,14 @@ class DataViewModel : ViewModel() {
 
     //LiveData which holds the list of events from the Firebase Database
     private val _events = MutableLiveData<List<Event>>()
-    val events: LiveData<List<Event>> get() = _events // Exposed LiveData
 
-    //LiveData which holds the list of favorite events for the current user
+    //LiveData which holds the list of favorites for the current user
     private val _favorites = MutableLiveData<List<Event>>()
-    val favorites: LiveData<List<Event>> get() = _favorites //exposed the list of favorite events
 
     //The Firebase database instance
     private val database = Firebase.database
 
-    // Listeners to subscribe/unsubscribe from Firebase updates
+    //listeners to subscribe/unsubscribe from Firebase updates
     private var eventsListener: ValueEventListener? = null
     private var favoritesListener: ValueEventListener? = null
 
@@ -108,6 +106,7 @@ class DataViewModel : ViewModel() {
     // Adds the event to the local favorites list immediately
     private fun addFavoriteLocally(event: Event) {
         val currentFav = _favorites.value?.toMutableList() ?: mutableListOf()
+
         if (!currentFav.contains(event)) {
             currentFav.add(event)
             _favorites.postValue(currentFav)
@@ -117,6 +116,7 @@ class DataViewModel : ViewModel() {
     // Removes the event from the local favorites list immediately
     private fun removeFavoriteLocally(event: Event) {
         val currentFav = _favorites.value?.toMutableList() ?: mutableListOf()
+
         if (currentFav.contains(event)) {
             currentFav.remove(event)
             _favorites.postValue(currentFav)
@@ -144,6 +144,7 @@ class DataViewModel : ViewModel() {
         } else {
             //remove the event locally
             removeFavoriteLocally(event)
+
             //update the database to remove the event from favorites
             database.getReference("copenhagen_buzz/favorites")
                 .child(currentUserId)
@@ -151,6 +152,7 @@ class DataViewModel : ViewModel() {
                 .removeValue()
         }
     }
+
     /**
      * Checks if the given event is marked as favorite locally.
      * (This may need to be updated to also listen to the Firebase favorites node.)

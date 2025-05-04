@@ -44,7 +44,7 @@ class TimelineFragment : Fragment() {
         timelineListView = binding.timelineListView
         val sortByButton = binding.sortByButton
 
-        // Set up click listener to show a PopupMenu with event categories.
+        //set up a listener to show a PopupMenu with event categories.
         sortByButton.setOnClickListener {
             val popup = PopupMenu(requireContext(), sortByButton)
 
