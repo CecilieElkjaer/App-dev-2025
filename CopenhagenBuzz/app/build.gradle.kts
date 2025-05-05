@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
     alias(libs.plugins.secrets.gradle)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -37,11 +38,38 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 }
 
 dependencies {
     implementation(platform(libs.firebase.bom))
+    implementation(libs.androidx.compose.bom)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.ui.android)
+    implementation(libs.androidx.ui.text.android)
+    implementation(libs.androidx.ui.android)
+    implementation(libs.androidx.ui.android)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.ui.text.android)
+    implementation(libs.androidx.ui.text.android)
+    implementation(libs.androidx.ui.graphics.android)
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.ui)
+    implementation(libs.ui.tooling.preview)
+    debugImplementation(libs.ui.tooling)
+    implementation(libs.androidx.compose.material3)
+
+
+
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)

@@ -1,5 +1,9 @@
 [versions]
+activityCompose = "1.9.0"
 agp = "8.8.0"
+coilCompose = "2.6.0"
+composeBom = "2025.04.01"
+constraintlayoutCompose = "1.1.1"
 dotenvKotlin = "6.2.2"
 facebookAndroidSdk = "latest.release"
 firebaseDatabaseKtx = "21.0.0"
@@ -11,13 +15,19 @@ junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
+lifecycleRuntimeCompose = "2.6.2"
 material = "1.10.0"
 constraintlayout = "2.1.4"
+material3 = "1.1.2"
+materialVersion = "1.6.0"
 navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
 activity = "1.10.0"
 picasso = "2.8"
 runtimeSavedInstanceState = "1.0.0-alpha11"
+ui = "1.6.0"
+uiTooling = "1.6.0"
+uiToolingPreview = "1.6.0"
 workRuntimeKtx = "2.10.0"
 google-services = "4.4.2"
 firebase-bom = "33.10.0"
@@ -27,9 +37,25 @@ facebook-login = "16.1.3"
 playServicesMaps = "19.1.0"
 secretsGradle = "2.0.1"
 playServicesLocation = "21.3.0"
+material3Android = "1.3.2"
+uiAndroid = "1.7.0"
+uiTextAndroid = "1.7.0"
+foundationAndroid = "1.7.0"
+uiGraphicsAndroid = "1.7.0"
+
 
 [libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
+androidx-material3 = { module = "androidx.compose.material3:material3" }
+androidx-ui = { module = "androidx.compose.ui:ui" }
+androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenvKotlin" }
 facebook-android-sdk = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebookAndroidSdk" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
@@ -52,9 +78,21 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-runtime-saved-instance-state = { group = "androidx.compose.runtime", name = "runtime-saved-instance-state", version.ref = "runtimeSavedInstanceState" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version = "1.2.0" }
+
+
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
+ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
+androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
+androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
+androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "uiTextAndroid" }
+androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
+androidx-ui-graphics-android = { group = "androidx.compose.ui", name = "ui-graphics-android", version.ref = "uiGraphicsAndroid" }
 
 
 [plugins]
@@ -62,4 +100,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 secrets-gradle = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradle"}
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version = "2.1.20" }
 
