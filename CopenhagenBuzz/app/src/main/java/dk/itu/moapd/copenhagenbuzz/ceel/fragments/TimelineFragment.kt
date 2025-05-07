@@ -56,7 +56,7 @@ class TimelineFragment : Fragment() {
                 val selectedCategory = menuItem.title.toString()
 
                 // Update button text with the selected category.
-                sortByButton.text = "Sort by: $selectedCategory"
+                sortByButton.text = "Filter by: $selectedCategory"
                 updateQuery(selectedCategory)
                 true
             }
