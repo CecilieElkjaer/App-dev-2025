@@ -191,7 +191,7 @@ class AddEventFragment : Fragment() {
      */
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && photoUri != null) {
-            binding.imagePreview?.setImageURI(photoUri)
+            binding.imagePreview.setImageURI(photoUri)
         } else {
             Snackbar.make(binding.root, "Camera cancelled or failed", Snackbar.LENGTH_SHORT).show()
         }

@@ -4,8 +4,6 @@ import android.app.Application
 import com.google.android.material.color.DynamicColors
 import com.facebook.appevents.AppEventsLogger
 import com.google.firebase.database.FirebaseDatabase
-import io.github.cdimascio.dotenv.Dotenv
-
 
 class MyApplication: Application() {
     companion object {
@@ -16,11 +14,7 @@ class MyApplication: Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Load the .env file
-        //val dotenv = Dotenv.configure().directory("CopenhagenBuzz/app/src/").filename(".env").load()
-        //DATABASE_URL = dotenv["DATABASE_URL"] ?: "https://moapd25-default-rtdb.europe-west1.firebasedatabase.app"
-
-        DATABASE_URL = "https://moapd25-default-rtdb.europe-west1.firebasedatabase.app"
+        DATABASE_URL = BuildConfig.DATABASE_URL
 
         database = FirebaseDatabase.getInstance()
         database.setPersistenceEnabled(true)

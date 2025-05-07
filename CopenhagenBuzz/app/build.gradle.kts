@@ -1,9 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
     alias(libs.plugins.secrets.gradle)
 }
+
+var localProperties = Properties()
+val localPropertiesFile = rootDir.resolve("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+var databaseUrl: String = localProperties.getProperty("DATABASE_URL") ?: ""
 
 android {
     namespace = "dk.itu.moapd.copenhagenbuzz.ceel"
@@ -20,12 +29,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "DATABASE_URL", "\"$databaseUrl\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "DATABASE_URL", "\"$databaseUrl\"")
         }
     }
     compileOptions {
@@ -37,6 +50,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
