@@ -27,8 +27,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.os.Build
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.storage.storage
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.Locale
+import java.util.UUID
 
 /**
  * A simple [Fragment] subclass.
@@ -85,52 +91,7 @@ class AddEventFragment : Fragment() {
 
         //clicking the add event button, propagates the following
         binding.fabAddEvent.setOnClickListener {
-            if (validateInputs()) {
-                val inputAddress = binding.editTextEventLocation.text.toString()
-
-                //uses GeocodingHelper to convert the address into coordinates.
-                LocationHelper.getCoordinatesFromAddress(requireContext(), inputAddress) { latitude, longitude ->
-                    if (latitude == null || longitude == null) {
-                        Snackbar.make(requireView(), "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
-                    } else {
-                        //create an EventLocation instance with the retrieved coordinates.
-                        val eventLocation = EventLocation(latitude = latitude, longitude = longitude, address = inputAddress)
-
-                        //Reserve a new key in the Realtime Database
-                        val eventsRef = Firebase.database.getReference("copenhagen_buzz/events")
-                        val newEventRef = eventsRef.push()
-                        val eventKey = newEventRef.key ?: run {
-                            Snackbar.make(requireView(), "Failed to generate event key", Snackbar.LENGTH_SHORT).show()
-                            return@getCoordinatesFromAddress
-                        }
-
-                        //Upload the photo to the Firebase Storage under "events/<eventKey>.jpg"
-                        val photo = photoUri
-                        val storageRef = Firebase.storage.reference.child("events").child("$eventKey.jpg")
-
-                        if (photo != null) {
-                            storageRef.putFile(photo).continueWithTask{ uploadTask ->
-                                if (!uploadTask.isSuccessful) throw uploadTask.exception!!
-                                storageRef.downloadUrl
-                            }.addOnSuccessListener { photoUrl ->
-                                //create the event with the remote URL
-                                val event = createEvent(eventLocation, photoUrl)
-
-                                //persist the event in the database
-                                newEventRef.setValue(event).addOnFailureListener { error ->
-                                    Snackbar.make(binding.root, "Save failed: ${error.message}", Snackbar.LENGTH_LONG).show()
-                                }
-                                Snackbar.make(binding.root, "Event added!", Snackbar.LENGTH_SHORT).show()
-                                requireActivity().supportFragmentManager.popBackStack()
-                            }.addOnFailureListener { error ->
-                                Snackbar.make(requireView(), "Photo upload failed: ${error.message}", Snackbar.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                }
-            } else {
-                Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT).show()
-            }
+            viewLifecycleOwner.lifecycleScope.launch { onAddEvent() }
         }
     }
 
@@ -148,7 +109,7 @@ class AddEventFragment : Fragment() {
     /**
      * Creates the event with needed information
      */
-    private fun createEvent(location: EventLocation, photoUrl: Uri?): Event {
+    private suspend fun createEvent(id: UUID): Event {
         //convert date string to Long
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val eventDate = LocalDate.parse(binding.editTextEventDate.text.toString(), dateFormatter)
@@ -159,14 +120,64 @@ class AddEventFragment : Fragment() {
 
         //create an Event object
         return Event(
-            eventPhotoUrl = photoUrl?.toString(),
             eventName = binding.editTextEventName.text.toString(),
-            eventLocation = location,
+            eventLocation = getEventLocation(),
             eventDate = timestamp,
             eventType = binding.dropdownEventType.text.toString(),
             eventDescription = binding.editTextEventDescription.text.toString(),
             userId = userId
         )
+    }
+
+    private suspend fun onAddEvent(){
+        if(!validateInputs()){
+            Snackbar.make(requireView(), "Please fill in all fields", Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
+        Snackbar.make(requireView(), "Adding Event..", Snackbar.LENGTH_SHORT).show()
+
+        val id = UUID.randomUUID()
+        val event = createEvent(id)
+
+        val uri = uploadImage(id)
+        event.eventPhotoUrl = uri
+
+        uploadEvent(id, event)
+        Snackbar.make(binding.root, "Event added!", Snackbar.LENGTH_SHORT).show()
+        requireActivity().supportFragmentManager.popBackStack()
+    }
+
+    private suspend fun getEventLocation() : EventLocation {
+        val inputAddress = binding.editTextEventLocation.text.toString()
+        val geocoder = Geocoder(requireContext(), Locale.getDefault())
+
+        val addresses = geocoder.getFromLocationName(inputAddress, 1)
+        val address = addresses?.firstOrNull()
+        if (address == null) {
+            Snackbar.make(requireView(), "Unable to resolve address. Please check the address.", Snackbar.LENGTH_SHORT).show()
+            return EventLocation(0.0, 0.0, inputAddress)
+        }
+
+        return EventLocation(
+            address.latitude,
+            address.longitude,
+            inputAddress
+        )
+    }
+
+    private suspend fun uploadImage(id : UUID) : String {
+        if (photoUri == null)
+            return ""
+
+        val storageRef = Firebase.storage.reference.child("events").child(id.toString())
+        storageRef.putFile(photoUri!!).await()
+
+        return storageRef.downloadUrl.await().toString()
+    }
+
+    private suspend fun uploadEvent(id: UUID, event: Event) {
+        Firebase.database.getReference("copenhagen_buzz/events").child(id.toString()).setValue(event)
     }
 
     /**
