@@ -153,6 +153,7 @@ class DataViewModel : ViewModel() {
         }
     }
 
+    fun getEvents(): LiveData<List<Event>> = _events
     /**
      * Checks if the given event is marked as favorite locally.
      * (This may need to be updated to also listen to the Firebase favorites node.)
@@ -160,4 +161,6 @@ class DataViewModel : ViewModel() {
     fun isFavorite(event: Event): Boolean {
         return _favorites.value?.contains(event) ?: false
     }
+
+
 }
